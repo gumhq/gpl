@@ -1,19 +1,20 @@
 use crate::state::{Post, Profile, Reaction, ReactionType, User};
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
+use std::str::FromStr;
 
 use crate::constants::*;
 use crate::events::{ReactionDeleted, ReactionNew};
 // Create a reaction to a post from a profile
 #[derive(Accounts)]
-#[instruction(reaction_type: ReactionType)]
+#[instruction(reaction_type: String)]
 pub struct CreateReaction<'info> {
     // The account that will be initialized as a Reaction
     #[account(
         init,
         seeds = [
             REACTION_PREFIX_SEED.as_bytes(),
-            reaction_type.as_ref().as_bytes(),
+            reaction_type.as_bytes(),
             to_post.to_account_info().key.as_ref(),
             from_profile.to_account_info().key.as_ref(),
         ],
@@ -55,12 +56,9 @@ pub struct CreateReaction<'info> {
 }
 
 // Handler to create a new Reaction account
-pub fn create_reaction_handler(
-    ctx: Context<CreateReaction>,
-    reaction_type: ReactionType,
-) -> Result<()> {
+pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
     let reaction = &mut ctx.accounts.reaction;
-    reaction.reaction_type = reaction_type;
+    reaction.reaction_type = ReactionType::from_str(&reaction_type).unwrap();
     reaction.bump = ctx.bumps["reaction"];
     reaction.to_post = *ctx.accounts.to_post.to_account_info().key;
     reaction.from_profile = *ctx.accounts.from_profile.to_account_info().key;
@@ -68,7 +66,7 @@ pub fn create_reaction_handler(
     // emit a new reaction event
     emit!(ReactionNew {
         reaction: *reaction.to_account_info().key,
-        reaction_type: reaction_type,
+        reaction_type: reaction.reaction_type,
         user: *ctx.accounts.user.to_account_info().key,
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,

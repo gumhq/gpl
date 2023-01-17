@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use strum_macros::AsRefStr;
+use strum_macros::{AsRefStr, EnumString};
 
 #[account]
 pub struct Reaction {
@@ -17,13 +17,22 @@ impl Reaction {
 }
 
 // Probably better to use emoji codes instead of strings
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, AsRefStr)]
+#[derive(
+    AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, AsRefStr, EnumString,
+)]
 pub enum ReactionType {
+    #[strum(ascii_case_insensitive)]
     Like,
+    #[strum(ascii_case_insensitive)]
     Dislike,
+    #[strum(ascii_case_insensitive)]
     Love,
+    #[strum(ascii_case_insensitive)]
     Haha,
+    #[strum(ascii_case_insensitive)]
     Wow,
+    #[strum(ascii_case_insensitive)]
     Sad,
+    #[strum(ascii_case_insensitive)]
     Angry,
 }

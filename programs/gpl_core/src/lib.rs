@@ -8,8 +8,6 @@ mod instructions;
 pub mod state;
 
 use instructions::*;
-use state::Namespace;
-use state::ReactionType;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -44,7 +42,7 @@ pub mod gpl_core {
     }
 
     // Create a new profile account
-    pub fn create_profile(ctx: Context<CreateProfile>, namespace: Namespace) -> Result<()> {
+    pub fn create_profile(ctx: Context<CreateProfile>, namespace: String) -> Result<()> {
         create_profile_handler(ctx, namespace)
     }
 
@@ -92,10 +90,7 @@ pub mod gpl_core {
     }
 
     // create a reaction account with reaction type
-    pub fn create_reaction(
-        ctx: Context<CreateReaction>,
-        reaction_type: ReactionType,
-    ) -> Result<()> {
+    pub fn create_reaction(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
         create_reaction_handler(ctx, reaction_type)
     }
 

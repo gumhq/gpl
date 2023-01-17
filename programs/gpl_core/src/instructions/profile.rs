@@ -1,21 +1,22 @@
 use crate::state::{Namespace, Profile, User};
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
+use std::str::FromStr;
 
 use crate::constants::*;
 use crate::events::{ProfileDeleted, ProfileNew};
 
 // Initialize a new profile account
 #[derive(Accounts)]
-#[instruction(namespace: Namespace)]
+#[instruction(namespace: String)]
 pub struct CreateProfile<'info> {
     // The account that will be initialized as a Profile
     #[account(
         init,
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
+            namespace.as_bytes(),
+            user.to_account_info().key.as_ref()
         ],
         bump,
         payer = authority,
@@ -38,9 +39,9 @@ pub struct CreateProfile<'info> {
 }
 
 // Handler to create a new Profile account
-pub fn create_profile_handler(ctx: Context<CreateProfile>, namespace: Namespace) -> Result<()> {
+pub fn create_profile_handler(ctx: Context<CreateProfile>, namespace: String) -> Result<()> {
     let profile = &mut ctx.accounts.profile;
-    profile.namespace = namespace;
+    profile.namespace = Namespace::from_str(&namespace).unwrap();
     profile.bump = ctx.bumps["profile"];
     profile.user = *ctx.accounts.user.to_account_info().key;
 
@@ -48,7 +49,7 @@ pub fn create_profile_handler(ctx: Context<CreateProfile>, namespace: Namespace)
     emit!(ProfileNew {
         profile: *profile.to_account_info().key,
         bump: profile.bump,
-        namespace: namespace,
+        namespace: profile.namespace,
         user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
     });
@@ -64,6 +65,7 @@ pub struct DeleteProfile<'info> {
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
             profile.namespace.as_ref().as_bytes(),
+            profile.user.as_ref(),
         ],
         bump = profile.bump,
         has_one = user,
