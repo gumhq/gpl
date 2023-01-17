@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::constants::*;
+use crate::events::{UserAuthorityChanged, UserDeleted, UserNew};
 use crate::state::User;
 
 // Initialize a new user account
@@ -32,6 +33,16 @@ pub fn create_user_handler(ctx: Context<CreateUser>, random_hash: [u8; 32]) -> R
     user.random_hash = random_hash;
     user.bump = ctx.bumps["user"];
     user.authority = *ctx.accounts.authority.key;
+
+    // emit new user event
+    emit!(UserNew {
+        user: *user.to_account_info().key,
+        random_hash: random_hash,
+        bump: user.bump,
+        authority: *ctx.accounts.authority.key,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
     Ok(())
 }
 
@@ -61,6 +72,13 @@ pub struct UpdateUser<'info> {
 pub fn update_user_handler(ctx: Context<UpdateUser>) -> Result<()> {
     let user = &mut ctx.accounts.user;
     user.authority = *ctx.accounts.new_authority.key;
+    // Emit user authority changed event
+    emit!(UserAuthorityChanged {
+        user: *user.to_account_info().key,
+        old_authority: *ctx.accounts.authority.key,
+        new_authority: *ctx.accounts.new_authority.key,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }
 
@@ -87,6 +105,12 @@ pub struct DeleteUser<'info> {
 }
 
 // Handler to close a user account
-pub fn delete_user_handler(_ctx: Context<DeleteUser>) -> Result<()> {
+pub fn delete_user_handler(ctx: Context<DeleteUser>) -> Result<()> {
+    // Emit user deleted event
+    emit!(UserDeleted {
+        user: *ctx.accounts.user.to_account_info().key,
+        authority: *ctx.accounts.authority.key,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }

@@ -3,6 +3,8 @@ use anchor_lang::prelude::*;
 use std::convert::AsRef;
 
 use crate::constants::*;
+use crate::errors::ConnectionError;
+use crate::events::{ConnectionDeleted, ConnectionNew};
 
 // Create a connection between two profiles, ie from_profile -> to_profile
 #[derive(Accounts)]
@@ -55,10 +57,27 @@ pub struct CreateConnection<'info> {
 
 // Handler to create a new Connection account
 pub fn create_connection_handler(ctx: Context<CreateConnection>) -> Result<()> {
+    // CHECK that the from_profile and to_profile are not the same
+    require_neq!(
+        ctx.accounts.from_profile.key(),
+        ctx.accounts.to_profile.key(),
+        ConnectionError::CannotConnectToSelf
+    );
+
     let connection = &mut ctx.accounts.connection;
     connection.from_profile = *ctx.accounts.from_profile.to_account_info().key;
     connection.to_profile = *ctx.accounts.to_profile.to_account_info().key;
     connection.bump = ctx.bumps["connection"];
+    // emit a new connection event
+    emit!(ConnectionNew {
+        connection: *connection.to_account_info().key,
+        user: *ctx.accounts.user.to_account_info().key,
+        from_profile: *ctx.accounts.from_profile.to_account_info().key,
+        to_profile: *ctx.accounts.to_profile.to_account_info().key,
+        bump: connection.bump,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
     Ok(())
 }
 
@@ -110,6 +129,14 @@ pub struct DeleteConnection<'info> {
 }
 
 // Handler to delete a Connection account
-pub fn delete_connection_handler(_ctx: Context<DeleteConnection>) -> Result<()> {
+pub fn delete_connection_handler(ctx: Context<DeleteConnection>) -> Result<()> {
+    // emit a delete connection event
+    emit!(ConnectionDeleted {
+        connection: *ctx.accounts.connection.to_account_info().key,
+        user: *ctx.accounts.user.to_account_info().key,
+        from_profile: *ctx.accounts.from_profile.to_account_info().key,
+        to_profile: *ctx.accounts.to_profile.to_account_info().key,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }

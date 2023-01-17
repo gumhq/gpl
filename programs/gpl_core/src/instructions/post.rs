@@ -1,4 +1,7 @@
-use crate::state::{Post, Profile, User};
+use crate::errors::PostError;
+use crate::events::{PostCommentNew, PostDeleted, PostNew, PostUpdated};
+use crate::state::{Post, Profile, User, MAX_LEN_URI};
+
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
 
@@ -51,11 +54,24 @@ pub fn create_post_handler(
     metadata_uri: String,
     random_hash: [u8; 32],
 ) -> Result<()> {
+    // CHECK metadata_uri length
+    require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
+
     let post = &mut ctx.accounts.post;
     post.metadata_uri = metadata_uri;
     post.bump = ctx.bumps["post"];
     post.random_hash = random_hash;
     post.profile = *ctx.accounts.profile.to_account_info().key;
+    // emit new post event
+    emit!(PostNew {
+        post: *post.to_account_info().key,
+        profile: *ctx.accounts.profile.to_account_info().key,
+        user: *ctx.accounts.user.to_account_info().key,
+        bump: post.bump,
+        random_hash: random_hash,
+        metadata_uri: post.metadata_uri.clone(),
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }
 
@@ -100,8 +116,18 @@ pub struct UpdatePost<'info> {
 
 // Handler to update a Post account
 pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String) -> Result<()> {
+    // CHECK metadata_uri length
+    require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
     let post = &mut ctx.accounts.post;
     post.metadata_uri = metadata_uri;
+    // emit update post event
+    emit!(PostUpdated {
+        post: *post.to_account_info().key,
+        profile: *ctx.accounts.profile.to_account_info().key,
+        user: *ctx.accounts.user.to_account_info().key,
+        metadata_uri: post.metadata_uri.clone(),
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }
 
@@ -160,12 +186,26 @@ pub fn create_comment_handler(
     metadata_uri: String,
     random_hash: [u8; 32],
 ) -> Result<()> {
+    // Check metadata_uri length
+    require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
+
     let post = &mut ctx.accounts.post;
     post.metadata_uri = metadata_uri;
     post.bump = ctx.bumps["post"];
     post.random_hash = random_hash;
     post.profile = *ctx.accounts.profile.to_account_info().key;
     post.reply_to = Some(*ctx.accounts.reply_to.to_account_info().key);
+    // emit new comment event
+    emit!(PostCommentNew {
+        post: *post.to_account_info().key,
+        profile: *ctx.accounts.profile.to_account_info().key,
+        user: *ctx.accounts.user.to_account_info().key,
+        bump: post.bump,
+        random_hash: random_hash,
+        metadata_uri: post.metadata_uri.clone(),
+        reply_to: *ctx.accounts.reply_to.to_account_info().key,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }
 
@@ -209,6 +249,13 @@ pub struct DeletePost<'info> {
 }
 
 // Handler to delete a Post account
-pub fn delete_post_handler(_ctx: Context<DeletePost>) -> Result<()> {
+pub fn delete_post_handler(ctx: Context<DeletePost>) -> Result<()> {
+    // emit delete post event
+    emit!(PostDeleted {
+        post: *ctx.accounts.post.to_account_info().key,
+        profile: *ctx.accounts.profile.to_account_info().key,
+        user: *ctx.accounts.user.to_account_info().key,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }

@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use std::convert::AsRef;
 
 use crate::constants::*;
-
+use crate::events::{ReactionDeleted, ReactionNew};
 // Create a reaction to a post from a profile
 #[derive(Accounts)]
 #[instruction(reaction_type: ReactionType)]
@@ -64,6 +64,18 @@ pub fn create_reaction_handler(
     reaction.bump = ctx.bumps["reaction"];
     reaction.to_post = *ctx.accounts.to_post.to_account_info().key;
     reaction.from_profile = *ctx.accounts.from_profile.to_account_info().key;
+
+    // emit a new reaction event
+    emit!(ReactionNew {
+        reaction: *reaction.to_account_info().key,
+        reaction_type: reaction_type,
+        user: *ctx.accounts.user.to_account_info().key,
+        to_post: *ctx.accounts.to_post.to_account_info().key,
+        from_profile: *ctx.accounts.from_profile.to_account_info().key,
+        bump: reaction.bump,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
     Ok(())
 }
 
@@ -117,6 +129,15 @@ pub struct DeleteReaction<'info> {
 }
 
 // Handler to delete a Reaction account
-pub fn delete_reaction_handler(_ctx: Context<DeleteReaction>) -> Result<()> {
+pub fn delete_reaction_handler(ctx: Context<DeleteReaction>) -> Result<()> {
+    // emit a reaction deleted event
+    emit!(ReactionDeleted {
+        reaction: *ctx.accounts.reaction.to_account_info().key,
+        reaction_type: ctx.accounts.reaction.reaction_type,
+        user: *ctx.accounts.user.to_account_info().key,
+        to_post: *ctx.accounts.to_post.to_account_info().key,
+        from_profile: *ctx.accounts.from_profile.to_account_info().key,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
     Ok(())
 }

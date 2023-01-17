@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use solana_security_txt::security_txt;
 
 mod constants;
+mod errors;
 mod events;
 mod instructions;
 pub mod state;

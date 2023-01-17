@@ -44,7 +44,7 @@ pub fn create_profile_handler(ctx: Context<CreateProfile>, namespace: Namespace)
     profile.bump = ctx.bumps["profile"];
     profile.user = *ctx.accounts.user.to_account_info().key;
 
-    // Emit an new profile event
+    // Emit new profile event
     emit!(ProfileNew {
         profile: *profile.to_account_info().key,
         bump: profile.bump,
@@ -84,12 +84,12 @@ pub struct DeleteProfile<'info> {
 }
 
 // Handler to close a profile account
-pub fn delete_profile_handler(_ctx: Context<DeleteProfile>) -> Result<()> {
-    // Emit a profile deleted event
+pub fn delete_profile_handler(ctx: Context<DeleteProfile>) -> Result<()> {
+    // Emit profile deleted event
     emit!(ProfileDeleted {
-        profile: *_ctx.accounts.profile.to_account_info().key,
-        namespace: _ctx.accounts.profile.namespace,
-        user: *_ctx.accounts.user.to_account_info().key,
+        profile: *ctx.accounts.profile.to_account_info().key,
+        namespace: ctx.accounts.profile.namespace,
+        user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
     });
     Ok(())
