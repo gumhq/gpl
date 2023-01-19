@@ -1,7 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import randombytes from "randombytes";
 import { expect } from "chai";
-import { GplCore } from "../target/types/gpl_core";
+import { GplCore } from "../../target/types/gpl_core";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 
@@ -21,7 +21,9 @@ describe("Post", async () => {
     await userTx.rpc();
 
     // Create a profile
-    const profileTx = program.methods.createProfile("Personal").accounts({ user: userPDA });
+    const profileTx = program.methods
+      .createProfile("Personal")
+      .accounts({ user: userPDA });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();
@@ -30,7 +32,9 @@ describe("Post", async () => {
   it("should create a post", async () => {
     const randomHash = randombytes(32);
     const metadataUri = "This is a test post";
-    const post = program.methods.createPost(metadataUri, randomHash).accounts({ user: userPDA, profile: profilePDA });
+    const post = program.methods
+      .createPost(metadataUri, randomHash)
+      .accounts({ user: userPDA, profile: profilePDA });
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;
     await post.rpc();
@@ -41,7 +45,9 @@ describe("Post", async () => {
 
   it("should update a post", async () => {
     const metadataUri = "This is an updated test post";
-    const post = program.methods.updatePost(metadataUri).accounts({ user: userPDA, profile: profilePDA, post: postPDA });
+    const post = program.methods
+      .updatePost(metadataUri)
+      .accounts({ user: userPDA, profile: profilePDA, post: postPDA });
     await post.rpc();
     const postAccount = await program.account.post.fetch(postPDA);
     expect(postAccount.metadataUri).is.equal(metadataUri);
@@ -49,13 +55,18 @@ describe("Post", async () => {
   });
 
   it("should delete a post", async () => {
-    const post = program.methods.deletePost().accounts({ user: userPDA, profile: profilePDA, post: postPDA });
+    const post = program.methods
+      .deletePost()
+      .accounts({ user: userPDA, profile: profilePDA, post: postPDA });
     await post.rpc();
     try {
       await program.account.post.fetch(postPDA);
     } catch (error: any) {
       expect(error).to.be.an("error");
-      expect(error.toString()).to.contain(`Account does not exist ${postPDA.toString()}`);
+      expect(error.toString()).to.contain(
+        `Account does not exist ${postPDA.toString()}`
+      );
     }
   });
 });
+
