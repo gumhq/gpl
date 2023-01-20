@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 use spl_account_compression::program::SplAccountCompression;
 use spl_account_compression::Noop;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW");
 
 #[program]
 pub mod gpl_compression {

@@ -7,6 +7,16 @@ skip-lint = false
 
 [programs.localnet]
 gpl_core = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+gpl_compression = "41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW"
+
+
+[[test.genesis]]
+address="cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
+program="test-programs/spl_account_compression.so"
+
+[[test.genesis]]
+address="noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV"
+program="test-programs/spl_noop.so"
 
 [registry]
 url = "https://api.apr.dev"
@@ -16,4 +26,4 @@ cluster = "localnet"
 wallet = "/Users/abishek/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000"

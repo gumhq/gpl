@@ -5,4 +5,4 @@ target
 **/*.rs.bk
 node_modules
 test-ledger
-!programs/gpl_core
+test-programs/*
