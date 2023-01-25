@@ -32,9 +32,8 @@ describe("Reaction", async () => {
     // Create a post
     const postRandomHash = randombytes(32);
     const metadataUri = "This is a test post";
-    const post = program.methods
-      .createPost(metadataUri, postRandomHash)
-      .accounts({ user: userPDA, profile: profilePDA });
+    const postMetadata = "text/plain";
+    const post = program.methods.createPost(metadataUri, postMetadata, postRandomHash).accounts({ user: userPDA, profile: profilePDA });
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;
     await post.rpc();

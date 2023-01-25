@@ -9,7 +9,7 @@ use crate::constants::*;
 
 // Create Post
 #[derive(Accounts)]
-#[instruction(metadata_uri: String, random_hash: [u8;32])]
+#[instruction(metadata_uri: String, post_metadata: String, random_hash: [u8;32])]
 pub struct CreatePost<'info> {
     // The account that will be initialized as a Post
     #[account(
@@ -52,6 +52,7 @@ pub struct CreatePost<'info> {
 pub fn create_post_handler(
     ctx: Context<CreatePost>,
     metadata_uri: String,
+    post_metadata: String,
     random_hash: [u8; 32],
 ) -> Result<()> {
     // CHECK metadata_uri length
@@ -59,6 +60,7 @@ pub fn create_post_handler(
 
     let post = &mut ctx.accounts.post;
     post.metadata_uri = metadata_uri;
+    post.post_metadata = post_metadata;
     post.bump = ctx.bumps["post"];
     post.random_hash = random_hash;
     post.profile = *ctx.accounts.profile.to_account_info().key;
@@ -70,6 +72,7 @@ pub fn create_post_handler(
         bump: post.bump,
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
+        post_metadata: post.post_metadata.clone(),
         timestamp: Clock::get()?.unix_timestamp,
     });
     Ok(())
@@ -77,7 +80,7 @@ pub fn create_post_handler(
 
 // Update a post account
 #[derive(Accounts)]
-#[instruction(metadata_uri: String)]
+#[instruction(metadata_uri: String, post_metadata: String)]
 pub struct UpdatePost<'info> {
     // The Post account to update
     #[account(
@@ -115,17 +118,19 @@ pub struct UpdatePost<'info> {
 }
 
 // Handler to update a Post account
-pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String) -> Result<()> {
+pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String, post_metadata: String) -> Result<()> {
     // CHECK metadata_uri length
     require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
     let post = &mut ctx.accounts.post;
     post.metadata_uri = metadata_uri;
+    post.post_metadata = post_metadata;
     // emit update post event
     emit!(PostUpdated {
         post: *post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
         user: *ctx.accounts.user.to_account_info().key,
         metadata_uri: post.metadata_uri.clone(),
+        post_metadata: post.post_metadata.clone(),
         timestamp: Clock::get()?.unix_timestamp,
     });
     Ok(())

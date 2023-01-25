@@ -55,14 +55,15 @@ pub mod gpl_core {
     pub fn create_post(
         ctx: Context<CreatePost>,
         metadata_uri: String,
+        post_metadata: String,
         random_hash: [u8; 32],
     ) -> Result<()> {
-        create_post_handler(ctx, metadata_uri, random_hash)
+        create_post_handler(ctx, metadata_uri, post_metadata, random_hash)
     }
 
     // update a post
-    pub fn update_post(ctx: Context<UpdatePost>, metadata_uri: String) -> Result<()> {
-        update_post_handler(ctx, metadata_uri)
+    pub fn update_post(ctx: Context<UpdatePost>, metadata_uri: String, post_metadata: String) -> Result<()> {
+        update_post_handler(ctx, metadata_uri, post_metadata)
     }
 
     // create a comment

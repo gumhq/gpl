@@ -9,6 +9,8 @@ skip-lint = false
 gpl_core = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 gpl_compression = "41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW"
 
+[programs.devnet]
+gpl_core = "4KnnwKYMEsHid1NL3LKKS3z2Y2iXRVwfDSRdQPWwJ1Em"
 
 [[test.genesis]]
 address="cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK"
@@ -23,7 +25,7 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "localnet"
-wallet = "/Users/abishek/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000"

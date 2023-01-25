@@ -32,25 +32,25 @@ describe("Post", async () => {
   it("should create a post", async () => {
     const randomHash = randombytes(32);
     const metadataUri = "This is a test post";
-    const post = program.methods
-      .createPost(metadataUri, randomHash)
-      .accounts({ user: userPDA, profile: profilePDA });
+    const postMetadata = "text/plain";
+    const post = program.methods.createPost(metadataUri, postMetadata, randomHash).accounts({ user: userPDA, profile: profilePDA });
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;
     await post.rpc();
     const postAccount = await program.account.post.fetch(postPDA);
     expect(postAccount.metadataUri).is.equal(metadataUri);
+    expect(postAccount.postMetadata).is.equal(postMetadata);
     expect(postAccount.profile.toString()).is.equal(profilePDA.toString());
   });
 
   it("should update a post", async () => {
     const metadataUri = "This is an updated test post";
-    const post = program.methods
-      .updatePost(metadataUri)
-      .accounts({ user: userPDA, profile: profilePDA, post: postPDA });
+    const postMetadata = "text/plain";
+    const post = program.methods.updatePost(metadataUri, postMetadata).accounts({ user: userPDA, profile: profilePDA, post: postPDA });
     await post.rpc();
     const postAccount = await program.account.post.fetch(postPDA);
     expect(postAccount.metadataUri).is.equal(metadataUri);
+    expect(postAccount.postMetadata).is.equal(postMetadata);
     expect(postAccount.profile.toString()).is.equal(profilePDA.toString());
   });
 

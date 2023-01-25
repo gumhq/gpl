@@ -60,6 +60,7 @@ pub struct PostNew {
     pub bump: u8,
     pub random_hash: [u8; 32],
     pub metadata_uri: String,
+    pub post_metadata: String,
     pub timestamp: i64,
 }
 
@@ -70,6 +71,7 @@ pub struct PostUpdated {
     pub profile: Pubkey,
     pub user: Pubkey,
     pub metadata_uri: String,
+    pub post_metadata: String,
     pub timestamp: i64,
 }
 
