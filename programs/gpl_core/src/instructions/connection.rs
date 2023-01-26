@@ -28,7 +28,7 @@ pub struct CreateConnection<'info> {
             from_profile.namespace.as_ref().as_bytes(),
             from_profile.user.as_ref(),
         ],
-        bump = from_profile.bump,
+        bump,
         has_one = user,
     )]
     pub from_profile: Account<'info, Profile>,
@@ -38,7 +38,7 @@ pub struct CreateConnection<'info> {
             to_profile.namespace.as_ref().as_bytes(),
             to_profile.user.as_ref(),
         ],
-        bump = to_profile.bump,
+        bump,
     )]
     pub to_profile: Account<'info, Profile>,
     #[account(
@@ -46,7 +46,7 @@ pub struct CreateConnection<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump
+        bump
     )]
     pub user: Account<'info, User>,
     #[account(mut)]
@@ -67,14 +67,12 @@ pub fn create_connection_handler(ctx: Context<CreateConnection>) -> Result<()> {
     let connection = &mut ctx.accounts.connection;
     connection.from_profile = *ctx.accounts.from_profile.to_account_info().key;
     connection.to_profile = *ctx.accounts.to_profile.to_account_info().key;
-    connection.bump = ctx.bumps["connection"];
     // emit a new connection event
     emit!(ConnectionNew {
         connection: *connection.to_account_info().key,
         user: *ctx.accounts.user.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         to_profile: *ctx.accounts.to_profile.to_account_info().key,
-        bump: connection.bump,
         timestamp: Clock::get()?.unix_timestamp,
     });
 
@@ -92,7 +90,7 @@ pub struct DeleteConnection<'info> {
             from_profile.user.as_ref(),
             to_profile.user.as_ref(),
         ],
-        bump = connection.bump,
+        bump,
         has_one = from_profile,
         has_one = to_profile,
     )]
@@ -103,7 +101,7 @@ pub struct DeleteConnection<'info> {
             from_profile.namespace.as_ref().as_bytes(),
             from_profile.user.as_ref(),
         ],
-        bump = from_profile.bump,
+        bump,
         has_one = user,
     )]
     pub from_profile: Account<'info, Profile>,
@@ -113,7 +111,7 @@ pub struct DeleteConnection<'info> {
             to_profile.namespace.as_ref().as_bytes(),
             to_profile.user.as_ref(),
         ],
-        bump = to_profile.bump,
+        bump,
     )]
     pub to_profile: Account<'info, Profile>,
     #[account(
@@ -121,7 +119,7 @@ pub struct DeleteConnection<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump
+        bump
     )]
     pub user: Account<'info, User>,
     #[account(mut)]

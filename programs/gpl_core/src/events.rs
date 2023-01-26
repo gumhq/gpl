@@ -10,7 +10,6 @@ use anchor_lang::prelude::*;
 pub struct UserNew {
     pub user: Pubkey,
     pub random_hash: [u8; 32],
-    pub bump: u8,
     pub authority: Pubkey,
     pub timestamp: i64,
 }
@@ -38,7 +37,6 @@ pub struct ProfileNew {
     pub profile: Pubkey,
     pub user: Pubkey,
     pub namespace: Namespace,
-    pub bump: u8,
     pub timestamp: i64,
 }
 
@@ -57,7 +55,6 @@ pub struct PostNew {
     pub post: Pubkey,
     pub profile: Pubkey,
     pub user: Pubkey,
-    pub bump: u8,
     pub random_hash: [u8; 32],
     pub metadata_uri: String,
     pub timestamp: i64,
@@ -88,7 +85,6 @@ pub struct PostCommentNew {
     pub post: Pubkey,
     pub profile: Pubkey,
     pub user: Pubkey,
-    pub bump: u8,
     pub random_hash: [u8; 32],
     pub metadata_uri: String,
     pub reply_to: Pubkey,
@@ -102,7 +98,6 @@ pub struct ConnectionNew {
     pub user: Pubkey,
     pub from_profile: Pubkey,
     pub to_profile: Pubkey,
-    pub bump: u8,
     pub timestamp: i64,
 }
 
@@ -124,7 +119,6 @@ pub struct ReactionNew {
     pub user: Pubkey,
     pub from_profile: Pubkey,
     pub to_post: Pubkey,
-    pub bump: u8,
     pub timestamp: i64,
 }
 

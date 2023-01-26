@@ -9,7 +9,6 @@ pub struct User {
     // User -> Profile -> Post -> [Connection, Reaction]
     pub authority: Pubkey,
     pub random_hash: [u8; 32],
-    pub bump: u8,
 }
 
 impl User {

@@ -28,7 +28,7 @@ pub struct CreateReaction<'info> {
             POST_PREFIX_SEED.as_bytes(),
             to_post.random_hash.as_ref(),
         ],
-        bump = to_post.bump,
+        bump,
     )]
     pub to_post: Account<'info, Post>,
     #[account(
@@ -37,7 +37,7 @@ pub struct CreateReaction<'info> {
             from_profile.namespace.as_ref().as_bytes(),
             user.to_account_info().key.as_ref(),
         ],
-        bump = from_profile.bump,
+        bump,
     )]
     pub from_profile: Account<'info, Profile>,
     #[account(
@@ -45,7 +45,7 @@ pub struct CreateReaction<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
     )]
     pub user: Account<'info, User>,
@@ -59,7 +59,6 @@ pub struct CreateReaction<'info> {
 pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
     let reaction = &mut ctx.accounts.reaction;
     reaction.reaction_type = ReactionType::from_str(&reaction_type).unwrap();
-    reaction.bump = ctx.bumps["reaction"];
     reaction.to_post = *ctx.accounts.to_post.to_account_info().key;
     reaction.from_profile = *ctx.accounts.from_profile.to_account_info().key;
 
@@ -70,7 +69,6 @@ pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: Stri
         user: *ctx.accounts.user.to_account_info().key,
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
-        bump: reaction.bump,
         timestamp: Clock::get()?.unix_timestamp,
     });
 
@@ -88,7 +86,7 @@ pub struct DeleteReaction<'info> {
             reaction.to_post.as_ref(),
             reaction.from_profile.as_ref(),
         ],
-        bump = reaction.bump,
+        bump,
         has_one = to_post,
         has_one = from_profile,
         close = authority,
@@ -99,7 +97,7 @@ pub struct DeleteReaction<'info> {
             POST_PREFIX_SEED.as_bytes(),
             to_post.random_hash.as_ref(),
         ],
-        bump = to_post.bump,
+        bump,
     )]
     pub to_post: Account<'info, Post>,
     #[account(
@@ -108,7 +106,7 @@ pub struct DeleteReaction<'info> {
             from_profile.namespace.as_ref().as_bytes(),
             user.to_account_info().key.as_ref(),
         ],
-        bump = from_profile.bump,
+        bump,
     )]
     pub from_profile: Account<'info, Profile>,
     #[account(
@@ -116,7 +114,7 @@ pub struct DeleteReaction<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
     )]
     pub user: Account<'info, User>,

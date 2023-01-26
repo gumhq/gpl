@@ -6,7 +6,6 @@ pub struct Connection {
     pub from_profile: Pubkey,
     // The profile that this connection is to
     pub to_profile: Pubkey,
-    pub bump: u8,
 }
 
 impl Connection {

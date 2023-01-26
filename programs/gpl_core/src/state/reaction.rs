@@ -9,7 +9,6 @@ pub struct Reaction {
     // The post that this reaction is to
     pub to_post: Pubkey,
     pub reaction_type: ReactionType,
-    pub bump: u8,
 }
 
 impl Reaction {

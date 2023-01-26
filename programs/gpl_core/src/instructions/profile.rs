@@ -28,7 +28,7 @@ pub struct CreateProfile<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
     )]
     pub user: Account<'info, User>,
@@ -42,13 +42,11 @@ pub struct CreateProfile<'info> {
 pub fn create_profile_handler(ctx: Context<CreateProfile>, namespace: String) -> Result<()> {
     let profile = &mut ctx.accounts.profile;
     profile.namespace = Namespace::from_str(&namespace).unwrap();
-    profile.bump = ctx.bumps["profile"];
     profile.user = *ctx.accounts.user.to_account_info().key;
 
     // Emit new profile event
     emit!(ProfileNew {
         profile: *profile.to_account_info().key,
-        bump: profile.bump,
         namespace: profile.namespace,
         user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
@@ -67,7 +65,7 @@ pub struct DeleteProfile<'info> {
             profile.namespace.as_ref().as_bytes(),
             profile.user.as_ref(),
         ],
-        bump = profile.bump,
+        bump,
         has_one = user,
         close = authority,
     )]
@@ -77,7 +75,7 @@ pub struct DeleteProfile<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
     )]
     pub user: Account<'info, User>,

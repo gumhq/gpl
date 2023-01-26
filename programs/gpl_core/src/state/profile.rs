@@ -9,7 +9,6 @@ pub struct Profile {
     // The namespace that this profile is in
     pub namespace: Namespace,
     // should there be metadata here?
-    pub bump: u8,
 }
 
 impl Profile {

@@ -29,7 +29,7 @@ pub struct CreatePost<'info> {
             profile.namespace.as_ref().as_bytes(),
             user.to_account_info().key.as_ref(),
         ],
-        bump = profile.bump,
+        bump,
         has_one = user,
     )]
     pub profile: Account<'info, Profile>,
@@ -38,7 +38,7 @@ pub struct CreatePost<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
     )]
     pub user: Account<'info, User>,
@@ -59,7 +59,6 @@ pub fn create_post_handler(
 
     let post = &mut ctx.accounts.post;
     post.metadata_uri = metadata_uri;
-    post.bump = ctx.bumps["post"];
     post.random_hash = random_hash;
     post.profile = *ctx.accounts.profile.to_account_info().key;
     // emit new post event
@@ -67,7 +66,6 @@ pub fn create_post_handler(
         post: *post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
         user: *ctx.accounts.user.to_account_info().key,
-        bump: post.bump,
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,
@@ -86,7 +84,7 @@ pub struct UpdatePost<'info> {
             POST_PREFIX_SEED.as_bytes(),
             post.random_hash.as_ref(),
         ],
-        bump = post.bump,
+        bump,
         has_one = profile,
     )]
     pub post: Account<'info, Post>,
@@ -96,7 +94,7 @@ pub struct UpdatePost<'info> {
             profile.namespace.as_ref().as_bytes(),
             user.to_account_info().key.as_ref(),
         ],
-        bump = profile.bump,
+        bump,
         has_one = user,
     )]
     pub profile: Account<'info, Profile>,
@@ -105,7 +103,7 @@ pub struct UpdatePost<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
     )]
     pub user: Account<'info, User>,
@@ -153,7 +151,7 @@ pub struct CreateComment<'info> {
             profile.namespace.as_ref().as_bytes(),
             user.to_account_info().key.as_ref(),
         ],
-        bump = profile.bump,
+        bump,
         has_one = user,
     )]
     pub profile: Account<'info, Profile>,
@@ -162,7 +160,7 @@ pub struct CreateComment<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
     )]
     pub user: Account<'info, User>,
@@ -171,7 +169,7 @@ pub struct CreateComment<'info> {
             POST_PREFIX_SEED.as_bytes(),
             reply_to.random_hash.as_ref(),
         ],
-        bump = reply_to.bump,
+        bump,
     )]
     pub reply_to: Account<'info, Post>,
     #[account(mut)]
@@ -191,7 +189,6 @@ pub fn create_comment_handler(
 
     let post = &mut ctx.accounts.post;
     post.metadata_uri = metadata_uri;
-    post.bump = ctx.bumps["post"];
     post.random_hash = random_hash;
     post.profile = *ctx.accounts.profile.to_account_info().key;
     post.reply_to = Some(*ctx.accounts.reply_to.to_account_info().key);
@@ -200,7 +197,6 @@ pub fn create_comment_handler(
         post: *post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
         user: *ctx.accounts.user.to_account_info().key,
-        bump: post.bump,
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
         reply_to: *ctx.accounts.reply_to.to_account_info().key,
@@ -219,7 +215,7 @@ pub struct DeletePost<'info> {
             POST_PREFIX_SEED.as_bytes(),
             post.random_hash.as_ref(),
         ],
-        bump = post.bump,
+        bump,
         has_one = profile,
         close = authority,
     )]
@@ -230,7 +226,7 @@ pub struct DeletePost<'info> {
             profile.namespace.as_ref().as_bytes(),
             user.to_account_info().key.as_ref(),
         ],
-        bump = profile.bump,
+        bump,
         has_one = user,
     )]
     pub profile: Account<'info, Profile>,
@@ -239,7 +235,7 @@ pub struct DeletePost<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
     )]
     pub user: Account<'info, User>,

@@ -31,14 +31,12 @@ pub struct CreateUser<'info> {
 pub fn create_user_handler(ctx: Context<CreateUser>, random_hash: [u8; 32]) -> Result<()> {
     let user = &mut ctx.accounts.user;
     user.random_hash = random_hash;
-    user.bump = ctx.bumps["user"];
     user.authority = *ctx.accounts.authority.key;
 
     // emit new user event
     emit!(UserNew {
         user: *user.to_account_info().key,
         random_hash: random_hash,
-        bump: user.bump,
         authority: *ctx.accounts.authority.key,
         timestamp: Clock::get()?.unix_timestamp,
     });
@@ -56,7 +54,7 @@ pub struct UpdateUser<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
     )]
     pub user: Account<'info, User>,
@@ -92,7 +90,7 @@ pub struct DeleteUser<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump = user.bump,
+        bump,
         has_one = authority,
         close = authority
     )]

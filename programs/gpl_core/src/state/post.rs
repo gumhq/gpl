@@ -7,7 +7,6 @@ pub const MAX_LEN_URI: usize = 128;
 pub struct Post {
     pub profile: Pubkey,
     pub metadata_uri: String,
-    pub bump: u8,
     pub random_hash: [u8; 32],
 
     //Comments are just replies
