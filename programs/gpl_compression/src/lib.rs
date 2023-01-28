@@ -1,8 +1,10 @@
-use std::mem::size_of;
-
 use anchor_lang::prelude::*;
-use spl_account_compression::program::SplAccountCompression;
-use spl_account_compression::Noop;
+
+pub mod instructions;
+pub mod state;
+mod utils;
+
+use crate::instructions::*;
 
 declare_id!("41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW");
 
@@ -10,63 +12,72 @@ declare_id!("41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW");
 pub mod gpl_compression {
     use super::*;
 
-    pub fn initialize(
+    // initialize tree
+    pub fn initialize_tree(
         ctx: Context<InitializeTreeConfig>,
         max_depth: u32,
         max_buffer_size: u32,
     ) -> Result<()> {
-        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let seed = merkle_tree.key();
-        let seeds = &[seed.as_ref(), &[*ctx.bumps.get("tree_config").unwrap()]];
-        let tree_config = &mut ctx.accounts.tree_config;
-        tree_config.set_inner(TreeConfig {
-            authority: *ctx.accounts.authority.key,
-        });
-        let authority_pda_signer = &[&seeds[..]];
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.compression_program.to_account_info(),
-            spl_account_compression::cpi::accounts::Initialize {
-                authority: ctx.accounts.tree_config.to_account_info(),
-                merkle_tree,
-                noop: ctx.accounts.log_wrapper.to_account_info(),
-            },
-            authority_pda_signer,
-        );
-        spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+        initialize_tree_handler(ctx, max_depth, max_buffer_size)
+    }
+
+    // create a compressed post
+    pub fn create_compressed_post(
+        ctx: Context<CreateCompressedPost>,
+        metadata_uri: String,
+        random_hash: [u8; 32],
+    ) -> Result<()> {
+        create_compressed_post_handler(ctx, metadata_uri, random_hash)
+    }
+
+    // update a compressed post
+    pub fn update_compressed_post<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateCompressedPost<'info>>,
+        metadata_uri: String,
+        new_metadata_uri: String,
+        random_hash: [u8; 32],
+        root: [u8; 32],
+        index: u32,
+    ) -> Result<()> {
+        update_compressed_post_handler(
+            ctx,
+            metadata_uri,
+            new_metadata_uri,
+            random_hash,
+            root,
+            index,
+        )
     }
 }
 
-//Initialize TreeConfig
-#[derive(Accounts)]
-#[instruction(max_depth: u32, max_buffer_size: u32)]
-pub struct InitializeTreeConfig<'info> {
-    #[account(
-        init,
-        seeds = [merkle_tree.to_account_info().key.as_ref()],
-        bump,
-        payer = authority,
-        space = TreeConfig::LEN
-    )]
-    pub tree_config: Account<'info, TreeConfig>,
-
-    #[account(zero)]
-    /// CHECK: This account must be all zeros
-    pub merkle_tree: UncheckedAccount<'info>,
-
-    #[account(mut)]
-    pub authority: Signer<'info>,
-
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
+#[error_code]
+pub enum GplCompressionError {
+    #[msg("Invalid authority provided")]
+    AssetIDNotFound,
 }
 
-// Account to hold the compressed data in a tree
-#[account]
-pub struct TreeConfig {
-    pub authority: Pubkey,
+#[event]
+pub struct CompressedPostNew {
+    pub asset_id: Pubkey,
+    pub post_id: Pubkey,
+    pub post_bump: u8,
+    pub index: u32,
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub random_hash: [u8; 32],
+    pub metadata_uri: String,
+    pub timestamp: i64,
 }
 
-impl TreeConfig {
-    pub const LEN: usize = 8 + size_of::<Self>();
+#[event]
+pub struct CompressedPostUpdated {
+    pub asset_id: Pubkey,
+    pub post_id: Pubkey,
+    pub post_bump: u8,
+    pub index: u32,
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub random_hash: [u8; 32],
+    pub metadata_uri: String,
+    pub timestamp: i64,
 }
