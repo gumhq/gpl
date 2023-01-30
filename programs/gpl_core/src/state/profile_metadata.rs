@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::state::{MAX_LEN_URI};
+
 #[account]
 pub struct ProfileMetadata {
     pub profile: Pubkey,
@@ -7,5 +9,5 @@ pub struct ProfileMetadata {
 }
 
 impl ProfileMetadata {
-    pub const LEN: usize = 8 + std::mem::size_of::<Self>();
+    pub const LEN: usize = 8 + std::mem::size_of::<Self>() + MAX_LEN_URI;
 }
