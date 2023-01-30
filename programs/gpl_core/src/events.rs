@@ -132,3 +132,32 @@ pub struct ReactionDeleted {
     pub to_post: Pubkey,
     pub timestamp: i64,
 }
+
+// This event is emitted whenever a new profile metadata is created.
+#[event]
+pub struct ProfileMetadataNew {
+    pub profile_metadata: Pubkey,
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub metadata_uri: String,
+    pub timestamp: i64,
+}
+
+// This event is emitted whenever a profile metadata is updated.
+#[event]
+pub struct ProfileMetadataUpdated {
+    pub profile_metadata: Pubkey,
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub metadata_uri: String,
+    pub timestamp: i64,
+}
+
+// This event is emitted whenever a profile metadata is deleted.
+#[event]
+pub struct ProfileMetadataDeleted {
+    pub profile_metadata: Pubkey,
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub timestamp: i64,
+}

@@ -51,6 +51,27 @@ pub mod gpl_core {
         delete_profile_handler(ctx)
     }
 
+    // create a new profile_metadata account
+    pub fn create_profile_metadata(
+        ctx: Context<CreateProfileMetadata>,
+        metadata_uri: String,
+    ) -> Result<()> {
+        create_profile_metadata_handler(ctx, metadata_uri)
+    }
+
+    // update a profile_metadata
+    pub fn update_profile_metadata(
+        ctx: Context<UpdateProfileMetadata>,
+        metadata_uri: String,
+    ) -> Result<()> {
+        update_profile_metadata_handler(ctx, metadata_uri)
+    }
+
+    // delete a profile_metadata
+    pub fn delete_profile_metadata(ctx: Context<DeleteProfileMetadata>) -> Result<()> {
+        delete_profile_metadata_handler(ctx)
+    }
+
     // create a new post account
     pub fn create_post(
         ctx: Context<CreatePost>,

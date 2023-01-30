@@ -15,6 +15,11 @@ pub enum PostError {
 }
 
 #[error_code]
+pub enum ProfileMetadataError {
+    URITooLong,
+}
+
+#[error_code]
 pub enum ConnectionError {
     CannotConnectToSelf,
 }
