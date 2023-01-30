@@ -49,7 +49,7 @@ describe("Profile Metadata", async () => {
   });
 
   it("should update a profile metadata", async () => {
-    const metadataUri = "https://example.com";
+    const metadataUri = "https://example.com/updated";
     const profileMetadata = program.methods
       .updateProfileMetadata(metadataUri)
       .accounts({
