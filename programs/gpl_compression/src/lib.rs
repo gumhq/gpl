@@ -1,9 +1,12 @@
 use anchor_lang::prelude::*;
 
+mod errors;
+mod events;
 pub mod instructions;
 pub mod state;
 mod utils;
 
+use crate::errors::GplCompressionError;
 use crate::instructions::*;
 
 declare_id!("41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW");
@@ -59,49 +62,18 @@ pub mod gpl_compression {
     ) -> Result<()> {
         delete_compressed_post_handler(ctx, metadata_uri, random_hash, root, index)
     }
-}
 
-#[error_code]
-pub enum GplCompressionError {
-    #[msg("Invalid authority provided")]
-    AssetIDNotFound,
-}
+    // create a compressed connection
+    pub fn create_compressed_connection(ctx: Context<CreateCompressedConnection>) -> Result<()> {
+        create_compressed_connection_handler(ctx)
+    }
 
-#[event]
-pub struct CompressedPostNew {
-    pub asset_id: Pubkey,
-    pub post_id: Pubkey,
-    pub post_bump: u8,
-    pub index: u32,
-    pub profile: Pubkey,
-    pub user: Pubkey,
-    pub random_hash: [u8; 32],
-    pub metadata_uri: String,
-    pub timestamp: i64,
-}
-
-#[event]
-pub struct CompressedPostUpdated {
-    pub asset_id: Pubkey,
-    pub post_id: Pubkey,
-    pub post_bump: u8,
-    pub index: u32,
-    pub profile: Pubkey,
-    pub user: Pubkey,
-    pub random_hash: [u8; 32],
-    pub metadata_uri: String,
-    pub timestamp: i64,
-}
-
-#[event]
-pub struct CompressedPostDeleted {
-    pub asset_id: Pubkey,
-    pub post_id: Pubkey,
-    pub post_bump: u8,
-    pub index: u32,
-    pub profile: Pubkey,
-    pub user: Pubkey,
-    pub random_hash: [u8; 32],
-    pub metadata_uri: String,
-    pub timestamp: i64,
+    // delete a compressed connection
+    pub fn delete_compressed_connection<'info>(
+        ctx: Context<'_, '_, '_, 'info, DeleteCompressedConnection<'info>>,
+        root: [u8; 32],
+        index: u32,
+    ) -> Result<()> {
+        delete_compressed_connection_handler(ctx, root, index)
+    }
 }

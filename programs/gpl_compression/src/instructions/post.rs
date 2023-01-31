@@ -1,11 +1,6 @@
+use crate::events::{CompressedPostDeleted, CompressedPostNew, CompressedPostUpdated};
 use crate::state::TreeConfig;
-use crate::utils::append_leaf;
-use crate::utils::replace_leaf;
-use crate::utils::try_find_asset_id;
-use crate::utils::LeafSchema;
-use crate::CompressedPostDeleted;
-use crate::CompressedPostNew;
-use crate::CompressedPostUpdated;
+use crate::utils::{append_leaf, replace_leaf, try_find_asset_id, LeafSchema};
 
 use gpl_core::errors::PostError;
 use spl_account_compression::wrap_application_data_v1;
@@ -118,7 +113,7 @@ pub fn create_compressed_post_handler(
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,
-        index: 0
+        index: 0 // TODO: Get the index from the tree
     });
 
     Ok(())
