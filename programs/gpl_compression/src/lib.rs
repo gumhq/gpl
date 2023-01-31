@@ -48,6 +48,17 @@ pub mod gpl_compression {
             index,
         )
     }
+
+    // delete a compressed post
+    pub fn delete_compressed_post<'info>(
+        ctx: Context<'_, '_, '_, 'info, DeleteCompressedPost<'info>>,
+        metadata_uri: String,
+        random_hash: [u8; 32],
+        root: [u8; 32],
+        index: u32,
+    ) -> Result<()> {
+        delete_compressed_post_handler(ctx, metadata_uri, random_hash, root, index)
+    }
 }
 
 #[error_code]
@@ -71,6 +82,19 @@ pub struct CompressedPostNew {
 
 #[event]
 pub struct CompressedPostUpdated {
+    pub asset_id: Pubkey,
+    pub post_id: Pubkey,
+    pub post_bump: u8,
+    pub index: u32,
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub random_hash: [u8; 32],
+    pub metadata_uri: String,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct CompressedPostDeleted {
     pub asset_id: Pubkey,
     pub post_id: Pubkey,
     pub post_bump: u8,

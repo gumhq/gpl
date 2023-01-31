@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::keccak::hashv;
 use borsh::{BorshDeserialize, BorshSerialize};
-use gpl_core::state::Post;
 
 use spl_account_compression::Node;
 
@@ -98,6 +97,3 @@ pub fn append_leaf<'info>(
     );
     spl_account_compression::cpi::append(cpi_ctx, leaf_node)
 }
-
-// replace_leaf -> Instruction { Context with Args, Accounts everything required to identify the asset
-// off-chain }
