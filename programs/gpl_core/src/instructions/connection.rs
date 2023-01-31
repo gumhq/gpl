@@ -14,8 +14,8 @@ pub struct CreateConnection<'info> {
         init,
         seeds = [
             CONNECTION_PREFIX_SEED.as_bytes(),
-            from_profile.user.as_ref(),
-            to_profile.user.as_ref(),
+            from_profile.key().as_ref(),
+            to_profile.key().as_ref()
         ],
         bump,
         payer = authority,
@@ -87,8 +87,8 @@ pub struct DeleteConnection<'info> {
         mut,
         seeds = [
             CONNECTION_PREFIX_SEED.as_bytes(),
-            from_profile.user.as_ref(),
-            to_profile.user.as_ref(),
+            from_profile.key().as_ref(),
+            to_profile.key().as_ref()
         ],
         bump,
         has_one = from_profile,
