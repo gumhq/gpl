@@ -96,4 +96,14 @@ pub mod gpl_compression {
     ) -> Result<()> {
         delete_compressed_reaction_handler(ctx, to_post, reaction_type, root, index)
     }
+
+    // create a compressed comment
+    pub fn create_compressed_comment(
+        ctx: Context<CreateCompressedComment>,
+        reply_to: Pubkey,
+        metadata_uri: String,
+        random_hash: [u8; 32],
+    ) -> Result<()> {
+        create_compressed_comment_handler(ctx, reply_to, metadata_uri, random_hash)
+    }
 }

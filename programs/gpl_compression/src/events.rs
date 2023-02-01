@@ -88,3 +88,17 @@ pub struct CompressedReactionDeleted {
     pub reaction_type: String,
     pub timestamp: i64,
 }
+
+#[event]
+pub struct CompressedCommentNew {
+    pub asset_id: Pubkey,
+    pub post_id: Pubkey,
+    pub post_bump: u8,
+    pub index: u32,
+    pub reply_to: Pubkey,
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub random_hash: [u8; 32],
+    pub metadata_uri: String,
+    pub timestamp: i64,
+}
