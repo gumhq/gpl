@@ -62,3 +62,29 @@ pub struct CompressedConnectionDeleted {
     pub user: Pubkey,
     pub timestamp: i64,
 }
+
+#[event]
+pub struct CompressedReactionNew {
+    pub asset_id: Pubkey,
+    pub reaction_id: Pubkey,
+    pub reaction_bump: u8,
+    pub index: u32,
+    pub from_profile: Pubkey,
+    pub to_post: Pubkey,
+    pub user: Pubkey,
+    pub reaction_type: String,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct CompressedReactionDeleted {
+    pub asset_id: Pubkey,
+    pub reaction_id: Pubkey,
+    pub reaction_bump: u8,
+    pub index: u32,
+    pub from_profile: Pubkey,
+    pub to_post: Pubkey,
+    pub user: Pubkey,
+    pub reaction_type: String,
+    pub timestamp: i64,
+}

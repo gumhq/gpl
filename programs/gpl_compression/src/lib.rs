@@ -76,4 +76,24 @@ pub mod gpl_compression {
     ) -> Result<()> {
         delete_compressed_connection_handler(ctx, root, index)
     }
+
+    // create a compressed reaction
+    pub fn create_compressed_reaction(
+        ctx: Context<CreateCompressedReaction>,
+        to_post: Pubkey,
+        reaction_type: String,
+    ) -> Result<()> {
+        create_compressed_reaction_handler(ctx, to_post, reaction_type)
+    }
+
+    // delete a compressed reaction
+    pub fn delete_compressed_reaction<'info>(
+        ctx: Context<'_, '_, '_, 'info, DeleteCompressedReaction<'info>>,
+        to_post: Pubkey,
+        reaction_type: String,
+        root: [u8; 32],
+        index: u32,
+    ) -> Result<()> {
+        delete_compressed_reaction_handler(ctx, to_post, reaction_type, root, index)
+    }
 }
