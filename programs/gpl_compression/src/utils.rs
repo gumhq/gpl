@@ -97,3 +97,24 @@ pub fn append_leaf<'info>(
     );
     spl_account_compression::cpi::append(cpi_ctx, leaf_node)
 }
+
+pub fn verify_leaf<'info>(
+    merkle_tree: &Pubkey,
+    bump: u8,
+    root_node: Node,
+    leaf_node: Node,
+    index: u32,
+    merkle_tree_account: &AccountInfo<'info>,
+    compression_program: &AccountInfo<'info>,
+) -> Result<()> {
+    let seeds = &[merkle_tree.as_ref(), &[bump]];
+    let authority_pda_signer = &[&seeds[..]];
+    let cpi_ctx = CpiContext::new_with_signer(
+        compression_program.clone(),
+        spl_account_compression::cpi::accounts::VerifyLeaf {
+            merkle_tree: merkle_tree_account.clone(),
+        },
+        authority_pda_signer,
+    );
+    spl_account_compression::cpi::verify_leaf(cpi_ctx, root_node, leaf_node, index)
+}
