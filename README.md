@@ -1,4 +1,3 @@
-# What is Gum?
 
 Gum, at its core, is a decentralized social media protocol on Solana. It unbundles traditional social media into Social Legos similar to how Defi unbundled traditional finance into Money Legos.
 
