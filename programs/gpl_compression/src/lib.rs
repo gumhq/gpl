@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use solana_security_txt::security_txt;
 
 mod errors;
 mod events;
@@ -10,6 +11,16 @@ use crate::errors::GplCompressionError;
 use crate::instructions::*;
 
 declare_id!("41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW");
+
+#[cfg(not(feature = "no-entrypoint"))]
+security_txt! {
+    name: "gpl_compression",
+    project_url: "https://gum.fun",
+    contacts: "email:hello@gum.fun,twitter:@gumhq",
+    policy: "",
+    preferred_languages: "en",
+    source_code: "https://github.com/gumhq/gpl"
+}
 
 #[program]
 pub mod gpl_compression {

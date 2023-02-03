@@ -589,6 +589,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "gpl_core",
+ "solana-security-txt",
  "spl-account-compression",
 ]
 

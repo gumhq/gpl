@@ -9,7 +9,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("CDDMdCAWB5AXgvEy7XJRggAu37QPG1b9aJXndZoPUkkm");
 
 #[cfg(not(feature = "no-entrypoint"))]
 security_txt! {

@@ -6,7 +6,11 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-gpl_core = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+gpl_core = "CDDMdCAWB5AXgvEy7XJRggAu37QPG1b9aJXndZoPUkkm"
+gpl_compression = "41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW"
+
+[programs.mainnet]
+gpl_core = "CDDMdCAWB5AXgvEy7XJRggAu37QPG1b9aJXndZoPUkkm"
 gpl_compression = "41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW"
 
 
