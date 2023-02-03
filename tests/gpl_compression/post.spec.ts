@@ -6,6 +6,7 @@ import {
   gpl_compression,
   setupTree,
   to_leaf,
+  assert_tree,
 } from "../utils/index";
 
 import {
@@ -85,7 +86,9 @@ describe("Post Compression", async () => {
       rpcConnection,
       merkleTree
     );
-    expect(treeData).to.not.be.null;
+
+    assert_tree(treeData, offChainTree);
+
     const postSeeds = [Buffer.from("post"), randomHash];
 
     const post = {
@@ -175,7 +178,9 @@ describe("Post Compression", async () => {
       rpcConnection,
       merkleTree
     );
-    expect(treeData).to.not.be.null;
+
+    assert_tree(treeData, offChainTree);
+
     const newPost = {
       metadataUri: newMetadataUri,
       randomHash,
@@ -212,6 +217,8 @@ describe("Post Compression", async () => {
       })
       .signers([payer])
       .rpc();
+
+    assert_tree(treeData, offChainTree);
 
     const postSeeds = [Buffer.from("post"), randomHash];
 
@@ -261,7 +268,8 @@ describe("Post Compression", async () => {
       rpcConnection,
       merkleTree
     );
-    expect(treeData).to.not.be.null;
+
+    assert_tree(treeData, offChainTree);
 
     const newPostLeaf = Buffer.from(Array(32).fill(0));
     offChainTree.updateLeaf(index, newPostLeaf);

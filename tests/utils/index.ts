@@ -17,6 +17,7 @@ import {
   SPL_NOOP_PROGRAM_ID,
   ValidDepthSizePair,
   MerkleTree,
+  ConcurrentMerkleTreeAccount,
 } from "@solana/spl-account-compression";
 
 const { keccak_256 } = pkg;
@@ -26,6 +27,15 @@ const provider = anchor.getProvider();
 export const gpl_core = anchor.workspace.GplCore as anchor.Program<GplCore>;
 export const gpl_compression = anchor.workspace
   .GplCompression as anchor.Program<GplCompression>;
+
+export function assert_tree(
+  onChainTree: ConcurrentMerkleTreeAccount,
+  offChainTree: MerkleTree
+): boolean {
+  const right = new PublicKey(onChainTree.getCurrentRoot()).toBase58();
+  const left = new PublicKey(offChainTree.getRoot()).toBase58();
+  return right === left;
+}
 
 export interface TreeInfo {
   merkleTree: PublicKey;
