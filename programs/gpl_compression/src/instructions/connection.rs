@@ -1,6 +1,7 @@
 use crate::events::{CompressedConnectionDeleted, CompressedConnectionNew};
 use crate::state::TreeConfig;
 use crate::utils::{append_leaf, replace_leaf, try_find_asset_id, LeafSchema};
+use anchor_lang::Discriminator;
 use gpl_core::errors::ConnectionError;
 use spl_account_compression::wrap_application_data_v1;
 use spl_account_compression::Node;
@@ -103,7 +104,7 @@ pub fn create_compressed_connection_handler(
     let leaf = LeafSchema {
         asset_id,
         seed_hash,
-        data_hash: hashv(&[&connection.try_to_vec()?]).to_bytes(),
+        data_hash: hashv(&[&Connection::DISCRIMINATOR, &connection.try_to_vec()?]).to_bytes(),
     };
 
     let leaf_node = leaf.to_node()?;
@@ -224,7 +225,7 @@ pub fn delete_compressed_connection_handler<'info>(
     let old_leaf = LeafSchema {
         asset_id,
         seed_hash,
-        data_hash: hashv(&[&old_connection.try_to_vec()?]).to_bytes(),
+        data_hash: hashv(&[&Connection::DISCRIMINATOR, &old_connection.try_to_vec()?]).to_bytes(),
     };
 
     let old_leaf_node = old_leaf.to_node()?;

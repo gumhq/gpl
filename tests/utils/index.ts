@@ -51,7 +51,7 @@ async function find_asset_id(
 ): Promise<PublicKey> {
   const [asset_id] = await PublicKey.findProgramAddress(
     [Buffer.from("asset"), merkleTree.toBuffer(), seedHash],
-    SPL_ACCOUNT_COMPRESSION_PROGRAM_ID
+    gpl_compression.programId
   );
   return asset_id;
 }
@@ -66,8 +66,8 @@ export async function to_leaf(
   const assetId = await find_asset_id(merkleTree, seedHash);
   const dataSerialized = await gpl_core.coder.accounts.encode(name, data);
   const dataHash = hash(dataSerialized);
-  const leaf = [assetId.toBuffer(), seedHash, dataHash];
-  return hash(Buffer.concat(leaf));
+  const leaf = Buffer.concat([assetId.toBuffer(), seedHash, dataHash]);
+  return hash(leaf);
 }
 
 export async function setupTree(

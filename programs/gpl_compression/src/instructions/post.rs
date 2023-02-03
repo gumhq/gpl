@@ -1,6 +1,7 @@
 use crate::events::{CompressedPostDeleted, CompressedPostNew, CompressedPostUpdated};
 use crate::state::TreeConfig;
 use crate::utils::{append_leaf, replace_leaf, try_find_asset_id, LeafSchema};
+use anchor_lang::Discriminator;
 
 use gpl_core::errors::PostError;
 use spl_account_compression::wrap_application_data_v1;
@@ -87,7 +88,7 @@ pub fn create_compressed_post_handler(
     let leaf = LeafSchema {
         asset_id,
         seed_hash,
-        data_hash: hashv(&[&post.try_to_vec()?]).to_bytes(),
+        data_hash: hashv(&[&Post::DISCRIMINATOR, &post.try_to_vec()?]).to_bytes(),
     };
 
     let leaf_node = leaf.to_node()?;
@@ -192,7 +193,7 @@ pub fn update_compressed_post_handler<'info>(
         asset_id,
         seed_hash,
         // May be better as a trait?
-        data_hash: hashv(&[&old_post.try_to_vec()?]).to_bytes(),
+        data_hash: hashv(&[&Post::DISCRIMINATOR, &old_post.try_to_vec()?]).to_bytes(),
     };
 
     let old_leaf_node = old_leaf.to_node()?;
@@ -208,7 +209,7 @@ pub fn update_compressed_post_handler<'info>(
         asset_id,
         seed_hash,
         // May be better as a trait?
-        data_hash: hashv(&[&new_post.try_to_vec()?]).to_bytes(),
+        data_hash: hashv(&[&Post::DISCRIMINATOR, &new_post.try_to_vec()?]).to_bytes(),
     };
 
     let new_leaf_node = new_leaf.to_node()?;
@@ -318,7 +319,7 @@ pub fn delete_compressed_post_handler<'info>(
         asset_id,
         seed_hash,
         // May be better as a trait?
-        data_hash: hashv(&[&old_post.try_to_vec()?]).to_bytes(),
+        data_hash: hashv(&[&Post::DISCRIMINATOR, &old_post.try_to_vec()?]).to_bytes(),
     };
 
     let old_leaf_node = old_leaf.to_node()?;

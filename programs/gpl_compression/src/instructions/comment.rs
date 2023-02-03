@@ -18,15 +18,11 @@ use spl_account_compression::Noop;
 use crate::events::CompressedCommentNew;
 use crate::state::TreeConfig;
 use crate::utils::LeafSchema;
-use crate::utils::{append_leaf, try_find_asset_id};
+use crate::utils::{append_leaf, try_find_asset_id, verify_leaf};
 
 // Create Connection
 #[derive(Accounts)]
-// NOTE: This is a bit of a hack and assumes that the post exists on a different tree.
-// We are purposefully skipping the check here to save on CU.
-// However, note that the post must exist on a different tree, and the indexer should ensure that
-// the `reply_to` exists.
-#[instruction(reply_to: Pubkey, metadata_uri: String, random_has: [u8; 32])]
+#[instruction(reply_to: Pubkey, metadata_uri: String, random_hash: [u8; 32], post_root: [u8; 32], post_leaf: [u8; 32], post_index: u32)]
 pub struct CreateCompressedComment<'info> {
     #[account(
         seeds = [
@@ -75,13 +71,31 @@ pub struct CreateCompressedComment<'info> {
 }
 
 // Handler to create a compressed connection
-pub fn create_compressed_comment_handler(
-    ctx: Context<CreateCompressedComment>,
+pub fn create_compressed_comment_handler<'info>(
+    ctx: Context<'_, '_, '_, 'info, CreateCompressedComment<'info>>,
     reply_to: Pubkey,
     metadata_uri: String,
     random_hash: [u8; 32],
+    post_root: [u8; 32],
+    post_leaf: [u8; 32],
+    post_index: u32,
 ) -> Result<()> {
     require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
+
+    // Check if the reply_to exists
+    // FIXME:
+    // They can potentially pass any proof. How do we verify this belongs to the asset unless we
+    // construct the leaf ourselves?
+    verify_leaf(
+        ctx.accounts.target_merkle_tree.key,
+        ctx.bumps["target_tree_config"],
+        post_root,
+        post_leaf,
+        post_index,
+        ctx.remaining_accounts,
+        &ctx.accounts.target_merkle_tree,
+        &ctx.accounts.compression_program,
+    )?;
 
     let post_seeds = [POST_PREFIX_SEED.as_bytes(), random_hash.as_ref()];
 

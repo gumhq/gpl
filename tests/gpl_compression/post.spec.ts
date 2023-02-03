@@ -89,7 +89,7 @@ describe("Post Compression", async () => {
     const postSeeds = [Buffer.from("post"), randomHash];
 
     const post = {
-      metadata_uri: metadataUri,
+      metadataUri,
       randomHash,
       profile: profilePDA,
       replyTo: null,
@@ -127,7 +127,7 @@ describe("Post Compression", async () => {
     const postSeeds = [Buffer.from("post"), randomHash];
 
     const oldPost = {
-      metadata_uri: metadataUri,
+      metadataUri,
       randomHash,
       profile: profilePDA,
       replyTo: null,
@@ -198,6 +198,7 @@ describe("Post Compression", async () => {
     );
 
     await gpl_compression.methods
+      //@ts-ignore
       .createCompressedPost(metadataUri, randomHash)
       .accounts({
         user: userPDA,
@@ -215,7 +216,7 @@ describe("Post Compression", async () => {
     const postSeeds = [Buffer.from("post"), randomHash];
 
     const oldPost = {
-      metadata_uri: metadataUri,
+      metadataUri,
       randomHash,
       profile: profilePDA,
       replyTo: null,

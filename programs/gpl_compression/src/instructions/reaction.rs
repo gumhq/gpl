@@ -1,3 +1,4 @@
+use anchor_lang::Discriminator;
 use std::convert::AsRef;
 use std::str::FromStr;
 
@@ -18,16 +19,13 @@ use spl_account_compression::Noop;
 
 use crate::events::{CompressedReactionDeleted, CompressedReactionNew};
 use crate::state::TreeConfig;
+use crate::utils::verify_leaf;
 use crate::utils::LeafSchema;
 use crate::utils::{append_leaf, replace_leaf, try_find_asset_id};
 
 // Create Connection
 #[derive(Accounts)]
-// NOTE: This is a bit of a hack and assumes that the post exists on a different tree.
-// We are purposefully skipping the check here to save on CU.
-// However, note that the post must exist on a different tree, and the indexer should ensure that
-// the `to_post` exists.
-#[instruction(to_post: Pubkey, reaction_type: String)]
+#[instruction(to_post: Pubkey, reaction_type: String, post_root: [u8; 32], post_leaf: [u8; 32], post_index: u32)]
 pub struct CreateCompressedReaction<'info> {
     #[account(
         seeds = [
@@ -76,14 +74,30 @@ pub struct CreateCompressedReaction<'info> {
 }
 
 // Handler to create a compressed connection
-pub fn create_compressed_reaction_handler(
-    ctx: Context<CreateCompressedReaction>,
+pub fn create_compressed_reaction_handler<'info>(
+    ctx: Context<'_, '_, '_, 'info, CreateCompressedReaction<'info>>,
     to_post: Pubkey,
     reaction_type: String,
+    post_root: [u8; 32],
+    post_leaf: [u8; 32],
+    post_index: u32,
 ) -> Result<()> {
     let from_profile = &ctx.accounts.from_profile;
 
-    // TODO: Check if the to_post exists
+    // Check if the to_post exists
+    // FIXME:
+    // They can potentially pass any proof. How do we verify this belongs to the asset unless we
+    // construct the leaf ourselves?
+    verify_leaf(
+        ctx.accounts.target_merkle_tree.key,
+        ctx.bumps["target_tree_config"],
+        post_root,
+        post_leaf,
+        post_index,
+        ctx.remaining_accounts,
+        &ctx.accounts.target_merkle_tree,
+        &ctx.accounts.compression_program,
+    )?;
 
     let reaction_seeds = [
         REACTION_PREFIX_SEED.as_bytes(),
@@ -108,7 +122,7 @@ pub fn create_compressed_reaction_handler(
     let leaf = LeafSchema {
         asset_id,
         seed_hash,
-        data_hash: hashv(&[&reaction.try_to_vec()?]).to_bytes(),
+        data_hash: hashv(&[&Reaction::DISCRIMINATOR, &reaction.try_to_vec()?]).to_bytes(),
     };
 
     let leaf_node = leaf.to_node()?;
@@ -216,7 +230,7 @@ pub fn delete_compressed_reaction_handler<'info>(
     let old_leaf = LeafSchema {
         asset_id,
         seed_hash,
-        data_hash: hashv(&[&old_reaction.try_to_vec()?]).to_bytes(),
+        data_hash: hashv(&[&Reaction::DISCRIMINATOR, &old_reaction.try_to_vec()?]).to_bytes(),
     };
 
     let old_leaf_node = old_leaf.to_node()?;

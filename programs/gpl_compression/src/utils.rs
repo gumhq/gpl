@@ -32,6 +32,7 @@ pub struct LeafSchema {
 impl LeafSchema {
     pub fn to_node(&self) -> Result<Node> {
         let serialized = self.try_to_vec()?;
+        msg!("Serialized leaf schema: {:?}", serialized);
         let node = hashv(&[&serialized]).to_bytes();
         Ok(node)
     }
@@ -40,7 +41,6 @@ impl LeafSchema {
 // Derive asset_id
 pub fn try_find_asset_id(merkle_tree: &Pubkey, seed_hash: [u8; 32]) -> Result<Pubkey> {
     let asset_seeds = [b"asset".as_ref(), merkle_tree.as_ref(), seed_hash.as_ref()];
-    msg!("Asset seeds: {:?}", asset_seeds);
     match Pubkey::try_find_program_address(&asset_seeds, &crate::id()) {
         Some((asset_id, _)) => Ok(asset_id),
         None => Err(GplCompressionError::AssetIDNotFound.into()),
@@ -104,6 +104,7 @@ pub fn verify_leaf<'info>(
     root_node: Node,
     leaf_node: Node,
     index: u32,
+    remaining_accounts: &[AccountInfo<'info>],
     merkle_tree_account: &AccountInfo<'info>,
     compression_program: &AccountInfo<'info>,
 ) -> Result<()> {
@@ -115,6 +116,7 @@ pub fn verify_leaf<'info>(
             merkle_tree: merkle_tree_account.clone(),
         },
         authority_pda_signer,
-    );
+    )
+    .with_remaining_accounts(remaining_accounts.to_vec());
     spl_account_compression::cpi::verify_leaf(cpi_ctx, root_node, leaf_node, index)
 }

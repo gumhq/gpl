@@ -51,6 +51,7 @@ describe("Reaction Compression", async () => {
     offChainTree = treeResult.offChainTree;
 
     const randomHash = randomBytes(32);
+    // @ts-ignore
     const userTx = gpl_core.methods.createUser(randomHash).accounts({
       authority: payer.publicKey,
     });
@@ -67,10 +68,10 @@ describe("Reaction Compression", async () => {
     await profileTx.signers([payer]).rpc();
 
     // Create a post
-    // Kinda hack but this should be a compressed post
     const postRandomHash = randomBytes(32);
     const metadataUri = "https://example.com";
     const post = gpl_core.methods
+      // @ts-ignore
       .createPost(metadataUri, postRandomHash)
       .accounts({
         user: userPDA,
@@ -83,8 +84,17 @@ describe("Reaction Compression", async () => {
   });
 
   it("should create a compressed reaction", async () => {
+    const postProof = offChainTree.getProof(0);
+
     await gpl_compression.methods
-      .createCompressedReaction(postPDA, "Haha")
+      .createCompressedReaction(
+        //@ts-ignore
+        postPDA,
+        "Haha",
+        postProof.root,
+        postProof.leaf,
+        0
+      )
       .accounts({
         user: userPDA,
         fromProfile: profilePDA,
@@ -133,8 +143,16 @@ describe("Reaction Compression", async () => {
 
   it("should create and delete a compressed reaction", async () => {
     let index = 0;
+    const postProof = offChainTree.getProof(index);
     await gpl_compression.methods
-      .createCompressedReaction(postPDA, "Haha")
+      .createCompressedReaction(
+        //@ts-ignore
+        postPDA,
+        "Haha",
+        postProof.root,
+        postProof.leaf,
+        index
+      )
       .accounts({
         user: userPDA,
         fromProfile: profilePDA,
@@ -186,6 +204,7 @@ describe("Reaction Compression", async () => {
     });
 
     await gpl_compression.methods
+      // @ts-ignore
       .deleteCompressedReaction(postPDA, "Haha", proof.root, index)
       .accounts({
         user: userPDA,

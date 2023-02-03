@@ -78,12 +78,22 @@ pub mod gpl_compression {
     }
 
     // create a compressed reaction
-    pub fn create_compressed_reaction(
-        ctx: Context<CreateCompressedReaction>,
+    pub fn create_compressed_reaction<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateCompressedReaction<'info>>,
         to_post: Pubkey,
         reaction_type: String,
+        post_root: [u8; 32],
+        post_leaf: [u8; 32],
+        post_index: u32,
     ) -> Result<()> {
-        create_compressed_reaction_handler(ctx, to_post, reaction_type)
+        create_compressed_reaction_handler(
+            ctx,
+            to_post,
+            reaction_type,
+            post_root,
+            post_leaf,
+            post_index,
+        )
     }
 
     // delete a compressed reaction
@@ -98,12 +108,23 @@ pub mod gpl_compression {
     }
 
     // create a compressed comment
-    pub fn create_compressed_comment(
-        ctx: Context<CreateCompressedComment>,
+    pub fn create_compressed_comment<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateCompressedComment<'info>>,
         reply_to: Pubkey,
         metadata_uri: String,
         random_hash: [u8; 32],
+        post_root: [u8; 32],
+        post_leaf: [u8; 32],
+        post_index: u32,
     ) -> Result<()> {
-        create_compressed_comment_handler(ctx, reply_to, metadata_uri, random_hash)
+        create_compressed_comment_handler(
+            ctx,
+            reply_to,
+            metadata_uri,
+            random_hash,
+            post_root,
+            post_leaf,
+            post_index,
+        )
     }
 }
