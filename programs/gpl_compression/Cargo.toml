@@ -17,4 +17,5 @@ default = []
 
 [dependencies]
 anchor-lang = "0.26.0"
+gpl_core = { version = "0.1.0", path = "../gpl_core", features = ["cpi"] }
 spl-account-compression = {version = "0.1.7", features = ["cpi"]}

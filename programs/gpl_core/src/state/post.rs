@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 pub const MAX_LEN_URI: usize = 128;
 
 #[account]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Post {
     pub profile: Pubkey,
     pub metadata_uri: String,

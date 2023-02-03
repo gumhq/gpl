@@ -588,6 +588,7 @@ name = "gpl_compression"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "gpl_core",
  "spl-account-compression",
 ]
 

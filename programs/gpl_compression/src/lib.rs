@@ -1,8 +1,13 @@
-use std::mem::size_of;
-
 use anchor_lang::prelude::*;
-use spl_account_compression::program::SplAccountCompression;
-use spl_account_compression::Noop;
+
+mod errors;
+mod events;
+pub mod instructions;
+pub mod state;
+mod utils;
+
+use crate::errors::GplCompressionError;
+use crate::instructions::*;
 
 declare_id!("41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW");
 
@@ -10,63 +15,116 @@ declare_id!("41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW");
 pub mod gpl_compression {
     use super::*;
 
-    pub fn initialize(
+    // initialize tree
+    pub fn initialize_tree(
         ctx: Context<InitializeTreeConfig>,
         max_depth: u32,
         max_buffer_size: u32,
     ) -> Result<()> {
-        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let seed = merkle_tree.key();
-        let seeds = &[seed.as_ref(), &[*ctx.bumps.get("tree_config").unwrap()]];
-        let tree_config = &mut ctx.accounts.tree_config;
-        tree_config.set_inner(TreeConfig {
-            authority: *ctx.accounts.authority.key,
-        });
-        let authority_pda_signer = &[&seeds[..]];
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.compression_program.to_account_info(),
-            spl_account_compression::cpi::accounts::Initialize {
-                authority: ctx.accounts.tree_config.to_account_info(),
-                merkle_tree,
-                noop: ctx.accounts.log_wrapper.to_account_info(),
-            },
-            authority_pda_signer,
-        );
-        spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+        initialize_tree_handler(ctx, max_depth, max_buffer_size)
     }
-}
 
-//Initialize TreeConfig
-#[derive(Accounts)]
-#[instruction(max_depth: u32, max_buffer_size: u32)]
-pub struct InitializeTreeConfig<'info> {
-    #[account(
-        init,
-        seeds = [merkle_tree.to_account_info().key.as_ref()],
-        bump,
-        payer = authority,
-        space = TreeConfig::LEN
-    )]
-    pub tree_config: Account<'info, TreeConfig>,
+    // create a compressed post
+    pub fn create_compressed_post(
+        ctx: Context<CreateCompressedPost>,
+        metadata_uri: String,
+        random_hash: [u8; 32],
+    ) -> Result<()> {
+        create_compressed_post_handler(ctx, metadata_uri, random_hash)
+    }
 
-    #[account(zero)]
-    /// CHECK: This account must be all zeros
-    pub merkle_tree: UncheckedAccount<'info>,
+    // update a compressed post
+    pub fn update_compressed_post<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateCompressedPost<'info>>,
+        metadata_uri: String,
+        new_metadata_uri: String,
+        random_hash: [u8; 32],
+        root: [u8; 32],
+        index: u32,
+    ) -> Result<()> {
+        update_compressed_post_handler(
+            ctx,
+            metadata_uri,
+            new_metadata_uri,
+            random_hash,
+            root,
+            index,
+        )
+    }
 
-    #[account(mut)]
-    pub authority: Signer<'info>,
+    // delete a compressed post
+    pub fn delete_compressed_post<'info>(
+        ctx: Context<'_, '_, '_, 'info, DeleteCompressedPost<'info>>,
+        metadata_uri: String,
+        random_hash: [u8; 32],
+        root: [u8; 32],
+        index: u32,
+    ) -> Result<()> {
+        delete_compressed_post_handler(ctx, metadata_uri, random_hash, root, index)
+    }
 
-    pub log_wrapper: Program<'info, Noop>,
-    pub compression_program: Program<'info, SplAccountCompression>,
-    pub system_program: Program<'info, System>,
-}
+    // create a compressed connection
+    pub fn create_compressed_connection(ctx: Context<CreateCompressedConnection>) -> Result<()> {
+        create_compressed_connection_handler(ctx)
+    }
 
-// Account to hold the compressed data in a tree
-#[account]
-pub struct TreeConfig {
-    pub authority: Pubkey,
-}
+    // delete a compressed connection
+    pub fn delete_compressed_connection<'info>(
+        ctx: Context<'_, '_, '_, 'info, DeleteCompressedConnection<'info>>,
+        root: [u8; 32],
+        index: u32,
+    ) -> Result<()> {
+        delete_compressed_connection_handler(ctx, root, index)
+    }
 
-impl TreeConfig {
-    pub const LEN: usize = 8 + size_of::<Self>();
+    // create a compressed reaction
+    pub fn create_compressed_reaction<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateCompressedReaction<'info>>,
+        to_post: Pubkey,
+        reaction_type: String,
+        post_root: [u8; 32],
+        post_leaf: [u8; 32],
+        post_index: u32,
+    ) -> Result<()> {
+        create_compressed_reaction_handler(
+            ctx,
+            to_post,
+            reaction_type,
+            post_root,
+            post_leaf,
+            post_index,
+        )
+    }
+
+    // delete a compressed reaction
+    pub fn delete_compressed_reaction<'info>(
+        ctx: Context<'_, '_, '_, 'info, DeleteCompressedReaction<'info>>,
+        to_post: Pubkey,
+        reaction_type: String,
+        root: [u8; 32],
+        index: u32,
+    ) -> Result<()> {
+        delete_compressed_reaction_handler(ctx, to_post, reaction_type, root, index)
+    }
+
+    // create a compressed comment
+    pub fn create_compressed_comment<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateCompressedComment<'info>>,
+        reply_to: Pubkey,
+        metadata_uri: String,
+        random_hash: [u8; 32],
+        post_root: [u8; 32],
+        post_leaf: [u8; 32],
+        post_index: u32,
+    ) -> Result<()> {
+        create_compressed_comment_handler(
+            ctx,
+            reply_to,
+            metadata_uri,
+            random_hash,
+            post_root,
+            post_leaf,
+            post_index,
+        )
+    }
 }
