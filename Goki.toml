@@ -1,0 +1,6 @@
+[rpc_endpoints]
+mainnet = "https://api.mainnet-beta.solana.com"
+devnet = "https://api.devnet.solana.com"
+testnet = "https://api.testnet.solana.com"
+localnet = "http://127.0.0.1:8899"
+debug = "http://127.0.0.1:8899"
