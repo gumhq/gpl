@@ -16,7 +16,7 @@ declare_id!("41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW");
 security_txt! {
     name: "gpl_compression",
     project_url: "https://gum.fun",
-    contacts: "email:hello@gum.fun,twitter:@gumhq",
+    contacts: "email:hello@gum.fun,twitter:@gumisfunn",
     policy: "",
     preferred_languages: "en",
     source_code: "https://github.com/gumhq/gpl"

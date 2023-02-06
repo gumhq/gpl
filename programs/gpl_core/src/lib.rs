@@ -15,7 +15,7 @@ declare_id!("CDDMdCAWB5AXgvEy7XJRggAu37QPG1b9aJXndZoPUkkm");
 security_txt! {
     name: "gpl_core",
     project_url: "https://gum.fun",
-    contacts: "email:hello@gum.fun,twitter:@gumhq",
+    contacts: "email:hello@gum.fun,twitter:@gumisfunn",
     policy: "",
     preferred_languages: "en",
     source_code: "https://github.com/gumhq/gpl"
