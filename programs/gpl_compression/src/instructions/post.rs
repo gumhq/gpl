@@ -61,7 +61,7 @@ pub struct CreateCompressedPost<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// Handler to create a new Post account
+// Handler to create a new Post
 pub fn create_compressed_post_handler(
     ctx: Context<CreateCompressedPost>,
     metadata_uri: String,
@@ -120,7 +120,7 @@ pub fn create_compressed_post_handler(
     Ok(())
 }
 
-// Update a post account
+// Update a post
 #[derive(Accounts)]
 #[instruction(metadata_uri: String, new_metadata_uri: String, random_hash: [u8;32], root: [u8;32], index: u32)]
 pub struct UpdateCompressedPost<'info> {
@@ -161,7 +161,7 @@ pub struct UpdateCompressedPost<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// Handler to update a Post account
+// Handler to update a Post
 pub fn update_compressed_post_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, UpdateCompressedPost<'info>>,
     metadata_uri: String,
@@ -246,7 +246,7 @@ pub fn update_compressed_post_handler<'info>(
     Ok(())
 }
 
-// Delete a post account
+// Delete a post
 #[derive(Accounts)]
 // Ideally this should be compacted down to asset_id, root, index
 #[instruction(metadata_uri: String, random_hash: [u8;32], root: [u8;32], index: u32)]
@@ -288,7 +288,7 @@ pub struct DeleteCompressedPost<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// Handler to delete a compressed post account
+// Handler to delete a compressed post
 pub fn delete_compressed_post_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, DeleteCompressedPost<'info>>,
     metadata_uri: String,

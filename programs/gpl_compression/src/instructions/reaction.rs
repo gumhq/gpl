@@ -23,7 +23,7 @@ use crate::utils::verify_leaf;
 use crate::utils::LeafSchema;
 use crate::utils::{append_leaf, replace_leaf, try_find_asset_id};
 
-// Create Connection
+// Create Reaction
 #[derive(Accounts)]
 #[instruction(to_post: Pubkey, reaction_type: String, post_root: [u8; 32], post_leaf: [u8; 32], post_index: u32)]
 pub struct CreateCompressedReaction<'info> {
@@ -73,7 +73,7 @@ pub struct CreateCompressedReaction<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// Handler to create a compressed connection
+// Handler to create a compressed reaction
 pub fn create_compressed_reaction_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateCompressedReaction<'info>>,
     to_post: Pubkey,

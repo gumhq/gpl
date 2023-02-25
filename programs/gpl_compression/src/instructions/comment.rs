@@ -20,7 +20,7 @@ use crate::state::TreeConfig;
 use crate::utils::LeafSchema;
 use crate::utils::{append_leaf, try_find_asset_id, verify_leaf};
 
-// Create Connection
+// Create Comment
 #[derive(Accounts)]
 #[instruction(reply_to: Pubkey, metadata_uri: String, random_hash: [u8; 32], post_root: [u8; 32], post_leaf: [u8; 32], post_index: u32)]
 pub struct CreateCompressedComment<'info> {
@@ -70,7 +70,7 @@ pub struct CreateCompressedComment<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// Handler to create a compressed connection
+// Handler to create a compressed comment
 pub fn create_compressed_comment_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateCompressedComment<'info>>,
     reply_to: Pubkey,

@@ -69,7 +69,7 @@ pub struct CreateCompressedConnection<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// Handler to create a new Connection account
+// Handler to create a new Connection
 pub fn create_compressed_connection_handler(
     ctx: Context<CreateCompressedConnection>,
 ) -> Result<()> {
@@ -136,7 +136,7 @@ pub fn create_compressed_connection_handler(
     Ok(())
 }
 
-// Delete a Connection account
+// Delete a Connection
 #[derive(Accounts)]
 // Ideally this should be compacted down to asset_id, root, index
 #[instruction(root: [u8;32], index: u32)]
@@ -188,7 +188,7 @@ pub struct DeleteCompressedConnection<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// Handler to delete a compressed Connection account
+// Handler to delete a compressed Connection
 pub fn delete_compressed_connection_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, DeleteCompressedConnection<'info>>,
     root: [u8; 32],
