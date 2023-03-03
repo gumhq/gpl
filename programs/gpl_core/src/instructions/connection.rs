@@ -93,6 +93,7 @@ pub struct DeleteConnection<'info> {
         bump,
         has_one = from_profile,
         has_one = to_profile,
+        close = authority,
     )]
     pub connection: Account<'info, Connection>,
     #[account(
