@@ -1,0 +1,157 @@
+use anchor_lang::prelude::*;
+use anchor_lang::system_program;
+
+declare_id!("3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE");
+
+#[program]
+pub mod gpl_session {
+    use super::*;
+
+    // create a session token
+    pub fn create_session(
+        ctx: Context<CreateSessionToken>,
+        top_up: Option<bool>,
+        valid_until: Option<i64>,
+    ) -> Result<()> {
+        // Set top up to false by default
+        let top_up = top_up.unwrap_or(false);
+        // Set valid until to 1 hour from now by default
+        let valid_until = valid_until.unwrap_or(Clock::get()?.unix_timestamp + 60 * 60 * 1);
+        create_session_token_handler(ctx, top_up, valid_until)
+    }
+
+    // revoke a session token
+    pub fn revoke_session(ctx: Context<RevokeSessionToken>) -> Result<()> {
+        revoke_session_token_handler(ctx)
+    }
+}
+
+// Create a SessionToken account
+#[derive(Accounts)]
+pub struct CreateSessionToken<'info> {
+    #[account(
+        init,
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            target_program.key().as_ref(),
+            session_signer.key().as_ref(),
+            authority.key().as_ref()
+        ],
+        bump,
+        payer = authority,
+        space = SessionToken::LEN
+    )]
+    pub session_token: Account<'info, SessionToken>,
+
+    pub session_signer: Signer<'info>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    /// CHECK this is the target program and account must be executable.
+    pub target_program: UncheckedAccount<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+// Handler to create a session token account
+pub fn create_session_token_handler(
+    ctx: Context<CreateSessionToken>,
+    top_up: bool,
+    valid_until: i64,
+) -> Result<()> {
+    // Valid until can't be greater than a day
+    require!(
+        valid_until <= Clock::get()?.unix_timestamp + 60 * 60 * 24,
+        SessionError::ValidityTooLong
+    );
+
+    let session_token = &mut ctx.accounts.session_token;
+    session_token.set_inner(SessionToken {
+        authority: ctx.accounts.authority.key(),
+        target_program: ctx.accounts.target_program.key(),
+        session_signer: ctx.accounts.session_signer.key(),
+        // May be allow the calle to request a specific expiration time?
+        // We can enable this based on feedback, however it remains that the program should
+        // determine the max expiration time.
+        valid_until: Clock::get()?.unix_timestamp + 60 * 60 * 1, // 1 hour
+    });
+
+    // Top up the session signer account with some lamports to pay for the transaction fees from
+    // the authority account.
+    if top_up {
+        system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.authority.to_account_info(),
+                    to: ctx.accounts.session_signer.to_account_info(),
+                },
+            ),
+            100000,
+        )?;
+    }
+
+    Ok(())
+}
+
+// Revoke a session token
+// We allow *anyone* to revoke a session token. This is because the session token is designed to
+// expire on it's own after a certain amount of time. However, if the session token is compromised
+// anyone can reveok it immediately.
+//
+// One attack vector here to consider, however is that a malicious actor could enumerate all the tokens
+// created using the program and revoke them all or keep revoking them as they are created. It is a
+// nuisance but not a security risk. We can easily address this by whitelisting a revoker.
+#[derive(Accounts)]
+pub struct RevokeSessionToken<'info> {
+    #[account(
+        mut,
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            session_token.target_program.key().as_ref(),
+            session_token.session_signer.key().as_ref(),
+            session_token.authority.key().as_ref()
+        ],
+        bump,
+        has_one = authority,
+        close = authority,
+    )]
+    pub session_token: Account<'info, SessionToken>,
+
+    #[account(mut)]
+    // Only the token authority can reclaim the rent
+    pub authority: SystemAccount<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+// Handler to revoke a session token
+pub fn revoke_session_token_handler(_: Context<RevokeSessionToken>) -> Result<()> {
+    Ok(())
+}
+
+// SessionToken Account
+#[account]
+pub struct SessionToken {
+    pub authority: Pubkey,
+    pub target_program: Pubkey,
+    pub session_signer: Pubkey,
+    pub valid_until: i64,
+}
+
+impl SessionToken {
+    pub const LEN: usize = 8 + std::mem::size_of::<Self>();
+    pub const SEED_PREFIX: &'static str = "session_token";
+
+    // check if the token is valid
+    pub fn is_valid(&self) -> Result<bool> {
+        let now = Clock::get()?.unix_timestamp;
+        Ok(now < self.valid_until)
+    }
+}
+
+#[error_code]
+pub enum SessionError {
+    #[msg("Requested validity is too long")]
+    ValidityTooLong,
+}
