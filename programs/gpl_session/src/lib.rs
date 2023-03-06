@@ -94,7 +94,7 @@ pub fn create_session_token_handler(
 // Revoke a session token
 // We allow *anyone* to revoke a session token. This is because the session token is designed to
 // expire on it's own after a certain amount of time. However, if the session token is compromised
-// anyone can reveok it immediately.
+// anyone can revoke it immediately.
 //
 // One attack vector here to consider, however is that a malicious actor could enumerate all the tokens
 // created using the program and revoke them all or keep revoking them as they are created. It is a
