@@ -46,7 +46,8 @@ pub struct CreateConnection<'info> {
             USER_PREFIX_SEED.as_bytes(),
             user.random_hash.as_ref(),
         ],
-        bump
+        bump,
+        has_one = authority
     )]
     pub user: Account<'info, User>,
     #[account(mut)]
