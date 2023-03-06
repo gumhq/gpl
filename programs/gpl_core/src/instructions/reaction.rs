@@ -38,6 +38,7 @@ pub struct CreateReaction<'info> {
             user.to_account_info().key.as_ref(),
         ],
         bump,
+        has_one = user,
     )]
     pub from_profile: Account<'info, Profile>,
     #[account(
@@ -107,6 +108,7 @@ pub struct DeleteReaction<'info> {
             user.to_account_info().key.as_ref(),
         ],
         bump,
+        has_one = user,
     )]
     pub from_profile: Account<'info, Profile>,
     #[account(
