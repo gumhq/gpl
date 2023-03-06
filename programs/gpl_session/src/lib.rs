@@ -47,8 +47,8 @@ pub struct CreateSessionToken<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    /// CHECK this is the target program and account must be executable.
-    pub target_program: UncheckedAccount<'info>,
+    #[account(executable)]
+    pub target_program: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
 }
