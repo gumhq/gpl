@@ -7,3 +7,4 @@ node_modules
 test-ledger
 test-programs/*
 .goki/
+yarn-error.log
