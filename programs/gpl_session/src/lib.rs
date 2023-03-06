@@ -70,10 +70,7 @@ pub fn create_session_token_handler(
         authority: ctx.accounts.authority.key(),
         target_program: ctx.accounts.target_program.key(),
         session_signer: ctx.accounts.session_signer.key(),
-        // May be allow the calle to request a specific expiration time?
-        // We can enable this based on feedback, however it remains that the program should
-        // determine the max expiration time.
-        valid_until: Clock::get()?.unix_timestamp + 60 * 60 * 1, // 1 hour
+        valid_until,
     });
 
     // Top up the session signer account with some lamports to pay for the transaction fees from
