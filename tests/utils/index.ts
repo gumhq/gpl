@@ -36,7 +36,8 @@ export const gpl_session = anchor.workspace
 
 export async function new_session(
   user: PublicKey,
-  targetProgram: PublicKey
+  targetProgram: PublicKey,
+  authority?: Keypair
 ): Promise<{ sessionPDA: PublicKey; sessionSigner: Keypair }> {
   const sessionSigner = Keypair.generate();
   const sessionTx = gpl_session.methods.createSession(true, null).accounts({
@@ -47,7 +48,11 @@ export async function new_session(
   const sessionPubKeys = await sessionTx.pubkeys();
   const sessionPDA = sessionPubKeys.sessionToken as PublicKey;
 
-  await sessionTx.signers([sessionSigner]).rpc();
+  if (authority !== undefined) {
+    await sessionTx.signers([sessionSigner, authority]).rpc();
+  } else {
+    await sessionTx.signers([sessionSigner]).rpc();
+  }
 
   return { sessionPDA, sessionSigner };
 }
