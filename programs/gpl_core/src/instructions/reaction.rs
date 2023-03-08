@@ -64,7 +64,7 @@ pub struct CreateReaction<'info> {
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()? == true,
+        constraint = session_token.is_valid()?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -150,7 +150,7 @@ pub struct DeleteReaction<'info> {
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()? == true,
+        constraint = session_token.is_valid()?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
