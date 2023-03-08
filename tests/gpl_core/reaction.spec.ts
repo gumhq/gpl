@@ -7,6 +7,8 @@ const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 
 anchor.setProvider(anchor.AnchorProvider.env());
 
+const provider = anchor.getProvider();
+
 describe("Reaction", async () => {
   let userPDA: anchor.web3.PublicKey;
   let profilePDA: anchor.web3.PublicKey;
@@ -41,9 +43,12 @@ describe("Reaction", async () => {
   });
 
   it("should create a reaction", async () => {
-    const reaction = program.methods
-      .createReaction("Haha")
-      .accounts({ toPost: postPDA, fromProfile: profilePDA, user: userPDA });
+    const reaction = program.methods.createReaction("Haha").accounts({
+      toPost: postPDA,
+      fromProfile: profilePDA,
+      user: userPDA,
+      sessionToken: null,
+    });
     const reactionPubKeys = await reaction.pubkeys();
     reactionPDA = reactionPubKeys.reaction as anchor.web3.PublicKey;
     await reaction.rpc();
@@ -64,6 +69,8 @@ describe("Reaction", async () => {
       fromProfile: profilePDA,
       user: userPDA,
       reaction: reactionPDA,
+      sessionToken: null,
+      refundReceiver: provider.wallet.publicKey,
     });
     await reaction.rpc();
 
@@ -72,7 +79,7 @@ describe("Reaction", async () => {
     } catch (error: any) {
       expect(error).to.be.an("error");
       expect(error.toString()).to.contain(
-        `Account does not exist ${reactionPDA.toString()}`
+        `Account does not exist or has no data ${reactionPDA.toString()}`
       );
     }
   });

@@ -64,7 +64,7 @@ describe("Post", async () => {
     } catch (error: any) {
       expect(error).to.be.an("error");
       expect(error.toString()).to.contain(
-        `Account does not exist ${postPDA.toString()}`
+        `Account does not exist or has no data ${postPDA.toString()}`
       );
     }
   });
