@@ -142,10 +142,6 @@ describe("Connection", async () => {
     });
 
     it("should create a connection", async () => {
-      const sessionTokenData = await gpl_session.account.sessionToken.fetch(
-        sessionToken
-      );
-
       const connection = program.methods.createConnection().accounts({
         fromProfile: profilePDA,
         toProfile: testProfilePDA,

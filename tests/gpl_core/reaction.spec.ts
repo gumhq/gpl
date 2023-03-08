@@ -2,6 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import randombytes from "randombytes";
 import { expect } from "chai";
 import { GplCore } from "../../target/types/gpl_core";
+import { new_session } from "../utils";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 
@@ -82,5 +83,67 @@ describe("Reaction", async () => {
         `Account does not exist or has no data ${reactionPDA.toString()}`
       );
     }
+  });
+
+  describe("Reaction with session token", async () => {
+    let sessionToken: anchor.web3.PublicKey;
+    let sessionKeypair: anchor.web3.Keypair;
+
+    before(async () => {
+      // @ts-ignore
+      const { sessionPDA, sessionSigner } = await new_session(
+        provider.wallet.publicKey,
+        program.programId
+      );
+      sessionToken = sessionPDA;
+      sessionKeypair = sessionSigner;
+    });
+
+    it("should create a reaction", async () => {
+      const reaction = program.methods.createReaction("Haha").accounts({
+        toPost: postPDA,
+        fromProfile: profilePDA,
+        user: userPDA,
+        sessionToken: sessionToken,
+        authority: sessionKeypair.publicKey,
+      });
+
+      const reactionPubKeys = await reaction.pubkeys();
+      reactionPDA = reactionPubKeys.reaction as anchor.web3.PublicKey;
+      await reaction.signers([sessionKeypair]).rpc();
+
+      const reactionAccount = await program.account.reaction.fetch(reactionPDA);
+      expect(reactionAccount.toPost.toBase58()).to.equal(postPDA.toBase58());
+      expect(reactionAccount.fromProfile.toBase58()).to.equal(
+        profilePDA.toBase58()
+      );
+      expect(reactionAccount.reactionType.toString()).to.equal(
+        { haha: {} }.toString()
+      );
+    });
+
+    it("should delete a reaction", async () => {
+      const reaction = program.methods.deleteReaction().accounts({
+        toPost: postPDA,
+        fromProfile: profilePDA,
+        user: userPDA,
+        reaction: reactionPDA,
+        sessionToken: sessionToken,
+        authority: sessionKeypair.publicKey,
+        // @ts-ignore
+        refundReceiver: provider.wallet.publicKey,
+      });
+
+      await reaction.signers([sessionKeypair]).rpc();
+
+      try {
+        await program.account.reaction.fetch(reactionPDA);
+      } catch (error: any) {
+        expect(error).to.be.an("error");
+        expect(error.toString()).to.contain(
+          `Account does not exist or has no data ${reactionPDA.toString()}`
+        );
+      }
+    });
   });
 });
