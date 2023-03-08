@@ -37,7 +37,7 @@ describe("Reaction", async () => {
     const metadataUri = "This is a test post";
     const post = program.methods
       .createPost(metadataUri, postRandomHash)
-      .accounts({ user: userPDA, profile: profilePDA });
+      .accounts({ user: userPDA, profile: profilePDA, sessionToken: null });
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;
     await post.rpc();
@@ -107,11 +107,9 @@ describe("Reaction", async () => {
         sessionToken: sessionToken,
         authority: sessionKeypair.publicKey,
       });
-
       const reactionPubKeys = await reaction.pubkeys();
       reactionPDA = reactionPubKeys.reaction as anchor.web3.PublicKey;
       await reaction.signers([sessionKeypair]).rpc();
-
       const reactionAccount = await program.account.reaction.fetch(reactionPDA);
       expect(reactionAccount.toPost.toBase58()).to.equal(postPDA.toBase58());
       expect(reactionAccount.fromProfile.toBase58()).to.equal(

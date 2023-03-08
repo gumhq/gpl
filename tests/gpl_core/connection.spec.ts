@@ -1,7 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import randombytes from "randombytes";
-import { airdrop, gpl_core, gpl_session, new_session } from "../utils";
+import { airdrop, new_session } from "../utils";
 import { expect } from "chai";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import { GplCore } from "../../target/types/gpl_core";
