@@ -160,6 +160,9 @@ pub struct DeleteConnection<'info> {
 
     #[account(mut, constraint = refund_receiver.key() == user.authority)]
     pub refund_receiver: SystemAccount<'info>,
+
+    // The system program
+    pub system_program: Program<'info, System>,
 }
 
 // Handler to delete a Connection account

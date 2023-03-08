@@ -1,10 +1,13 @@
 use crate::state::{Post, Profile, Reaction, ReactionType, User};
 use anchor_lang::prelude::*;
+use gpl_session::program::GplSession;
+use gpl_session::SessionToken;
 use std::convert::AsRef;
 use std::str::FromStr;
 
 use crate::constants::*;
 use crate::events::{ReactionDeleted, ReactionNew};
+
 // Create a reaction to a post from a profile
 #[derive(Accounts)]
 #[instruction(reaction_type: String)]
@@ -47,11 +50,27 @@ pub struct CreateReaction<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
+        // Better implemented as a function
+        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
+
+    #[account(
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            session_token.target_program.key().as_ref(),
+            session_token.session_signer.key().as_ref(),
+            session_token.authority.key().as_ref()
+        ],
+        seeds::program = GplSession::id(),
+        bump,
+        constraint = session_token.is_valid()? == true,
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
+
     #[account(mut)]
     pub authority: Signer<'info>,
+
     // The system program
     pub system_program: Program<'info, System>,
 }
@@ -90,7 +109,7 @@ pub struct DeleteReaction<'info> {
         bump,
         has_one = to_post,
         has_one = from_profile,
-        close = authority,
+        close = refund_receiver,
     )]
     pub reaction: Account<'info, Reaction>,
     #[account(
@@ -117,11 +136,29 @@ pub struct DeleteReaction<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
+        // Better implemented as a function
+        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
+
+    #[account(
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            session_token.target_program.key().as_ref(),
+            session_token.session_signer.key().as_ref(),
+            session_token.authority.key().as_ref()
+        ],
+        seeds::program = GplSession::id(),
+        bump,
+        constraint = session_token.is_valid()? == true,
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
     pub authority: Signer<'info>,
+
+    #[account(mut, constraint = refund_receiver.key() == user.authority)]
+    pub refund_receiver: SystemAccount<'info>,
+
     // The system program
     pub system_program: Program<'info, System>,
 }
