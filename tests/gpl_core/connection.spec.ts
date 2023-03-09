@@ -1,12 +1,13 @@
 import * as anchor from "@project-serum/anchor";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import randombytes from "randombytes";
-import { airdrop } from "../utils";
+import { airdrop, new_session } from "../utils";
 import { expect } from "chai";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import { GplCore } from "../../target/types/gpl_core";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
+const provider = anchor.getProvider();
 
 anchor.setProvider(anchor.AnchorProvider.env());
 
@@ -87,6 +88,7 @@ describe("Connection", async () => {
       fromProfile: profilePDA,
       toProfile: testProfilePDA,
       user: userPDA,
+      sessionToken: null,
     });
     const pubKeys = await connection.pubkeys();
     connectionPDA = pubKeys.connection as anchor.web3.PublicKey;
@@ -109,6 +111,9 @@ describe("Connection", async () => {
       toProfile: testProfilePDA,
       connection: connectionPDA,
       user: userPDA,
+      sessionToken: null,
+      // @ts-ignore
+      refundReceiver: provider.wallet.publicKey,
     });
     await connection.rpc();
 
@@ -117,8 +122,68 @@ describe("Connection", async () => {
     } catch (error: any) {
       expect(error).to.be.an("error");
       expect(error.toString()).to.contain(
-        `Account does not exist ${connectionPDA.toString()}`
+        `Account does not exist or has no data ${connectionPDA.toString()}`
       );
     }
+  });
+
+  describe("Connection with session token", async () => {
+    let sessionToken: anchor.web3.PublicKey;
+    let sessionKeypair: anchor.web3.Keypair;
+
+    before(async () => {
+      // @ts-ignore
+      const { sessionPDA, sessionSigner } = await new_session(
+        provider.wallet.publicKey,
+        program.programId
+      );
+      sessionToken = sessionPDA;
+      sessionKeypair = sessionSigner;
+    });
+
+    it("should create a connection", async () => {
+      const connection = program.methods.createConnection().accounts({
+        fromProfile: profilePDA,
+        toProfile: testProfilePDA,
+        user: userPDA,
+        sessionToken: sessionToken,
+        authority: sessionKeypair.publicKey,
+      });
+      const pubKeys = await connection.pubkeys();
+      connectionPDA = pubKeys.connection as anchor.web3.PublicKey;
+      await connection.signers([sessionKeypair]).rpc();
+      const connectionAccount = await program.account.connection.fetch(
+        connectionPDA
+      );
+      expect(connectionAccount.fromProfile.toBase58()).to.equal(
+        profilePDA.toBase58()
+      );
+      expect(connectionAccount.toProfile.toBase58()).to.equal(
+        testProfilePDA.toBase58()
+      );
+    });
+
+    it("should delete a connection", async () => {
+      const connection = program.methods.deleteConnection().accounts({
+        fromProfile: profilePDA,
+        toProfile: testProfilePDA,
+        connection: connectionPDA,
+        user: userPDA,
+        sessionToken: sessionToken,
+        authority: sessionKeypair.publicKey,
+        // @ts-ignore
+        refundReceiver: provider.wallet.publicKey,
+      });
+      await connection.signers([sessionKeypair]).rpc();
+
+      try {
+        await program.account.connection.fetch(connectionPDA);
+      } catch (error: any) {
+        expect(error).to.be.an("error");
+        expect(error.toString()).to.contain(
+          `Account does not exist or has no data ${connectionPDA.toString()}`
+        );
+      }
+    });
   });
 });

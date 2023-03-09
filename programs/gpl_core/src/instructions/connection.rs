@@ -1,5 +1,7 @@
 use crate::state::{Connection, Profile, User};
 use anchor_lang::prelude::*;
+use gpl_session::program::GplSession;
+use gpl_session::SessionToken;
 use std::convert::AsRef;
 
 use crate::constants::*;
@@ -47,9 +49,24 @@ pub struct CreateConnection<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority
+        // Better implemented as a function
+        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
+
+    #[account(
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            session_token.target_program.key().as_ref(),
+            session_token.session_signer.key().as_ref(),
+            session_token.authority.key().as_ref()
+        ],
+        seeds::program = GplSession::id(),
+        bump,
+        constraint = session_token.is_valid()?,
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
+
     #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
@@ -94,7 +111,7 @@ pub struct DeleteConnection<'info> {
         bump,
         has_one = from_profile,
         has_one = to_profile,
-        close = authority,
+        close = refund_receiver,
     )]
     pub connection: Account<'info, Connection>,
     #[account(
@@ -122,11 +139,30 @@ pub struct DeleteConnection<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority
+        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
+    #[account(
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            session_token.target_program.key().as_ref(),
+            session_token.session_signer.key().as_ref(),
+            session_token.authority.key().as_ref()
+        ],
+        seeds::program = GplSession::id(),
+        bump,
+        constraint = session_token.is_valid()?,
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
+
     #[account(mut)]
     pub authority: Signer<'info>,
+
+    #[account(mut, constraint = refund_receiver.key() == user.authority)]
+    pub refund_receiver: SystemAccount<'info>,
+
+    // The system program
+    pub system_program: Program<'info, System>,
 }
 
 // Handler to delete a Connection account

@@ -79,7 +79,7 @@ describe("Profile Metadata", async () => {
     } catch (error: any) {
       expect(error).to.be.an("error");
       expect(error.toString()).to.contain(
-        `Account does not exist ${profileMetadataPDA.toString()}`
+        `Account does not exist or has no data ${profileMetadataPDA.toString()}`
       );
     }
   });

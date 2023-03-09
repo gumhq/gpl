@@ -73,9 +73,8 @@ describe("User", async () => {
     } catch (error: any) {
       expect(error).to.be.an("error");
       expect(error.toString()).to.contain(
-        `Account does not exist ${randomUserPDA.toString()}`
+        `Account does not exist or has no data ${randomUserPDA.toString()}`
       );
     }
   });
 });
-
