@@ -4,13 +4,12 @@ use std::convert::AsRef;
 use std::str::FromStr;
 
 use crate::constants::*;
-use crate::events::{ProfileDeleted, ProfileNew};
+use crate::events::{ProfileV2Deleted, ProfileV2New, ProfileV2Updated};
 
 // Initialize a new profile account
 #[derive(Accounts)]
 #[instruction(namespace: String, metadata_uri: String)]
 pub struct CreateProfileV2<'info> {
-    // The account that will be initialized as a Profile
     #[account(
         init,
         seeds = [
@@ -57,12 +56,14 @@ pub fn create_profile_v2_handler(
         metadata_uri,
         screen_name: *ctx.accounts.screen_name.key,
     });
-    // Emit new profile event
-    emit!(ProfileNew {
+    // Emit new profile_v2 event
+    emit!(ProfileV2New {
         profile: *profile.to_account_info().key,
         namespace: profile.namespace,
         user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
+        screen_name: profile.screen_name,
+        metadata_uri: profile.metadata_uri.clone(),
     });
     Ok(())
 }
@@ -71,7 +72,6 @@ pub fn create_profile_v2_handler(
 #[derive(Accounts)]
 #[instruction(metadata_uri: String)]
 pub struct UpdateProfileV2<'info> {
-    // The account that will be initialized as a Profile
     #[account(
         mut,
         seeds = [
@@ -93,7 +93,7 @@ pub struct UpdateProfileV2<'info> {
     )]
     pub user: Account<'info, User>,
 
-    /// CHECK that this PDA is either SNS, ANS or GPL Nameservice
+    /// CHECK that this PDA is either SNS, ANS or GPL Nameservice and is owned by the user
     pub screen_name: AccountInfo<'info>,
 
     #[account(mut)]
@@ -107,13 +107,21 @@ pub fn update_profile_v2_handler(
 ) -> Result<()> {
     let profile = &mut ctx.accounts.profile_v2;
     profile.metadata_uri = metadata_uri;
+    // Emit a profile_v2 update event
+    emit!(ProfileV2Updated {
+        profile: *profile.to_account_info().key,
+        namespace: profile.namespace,
+        user: *ctx.accounts.user.to_account_info().key,
+        timestamp: Clock::get()?.unix_timestamp,
+        screen_name: profile.screen_name,
+        metadata_uri: profile.metadata_uri.clone(),
+    });
     Ok(())
 }
 
 // Delete a profile account
 #[derive(Accounts)]
 pub struct DeleteProfileV2<'info> {
-    // The Profile account to delete
     #[account(
         mut,
         seeds = [
@@ -141,12 +149,14 @@ pub struct DeleteProfileV2<'info> {
 
 // Handler to close a profile account
 pub fn delete_profile_v2_handler(ctx: Context<DeleteProfileV2>) -> Result<()> {
-    // Emit profile deleted event
-    emit!(ProfileDeleted {
+    // Emit profile_v2 deleted event
+    emit!(ProfileV2Deleted {
         profile: *ctx.accounts.profile_v2.to_account_info().key,
         namespace: ctx.accounts.profile_v2.namespace,
         user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
+        screen_name: ctx.accounts.profile_v2.screen_name,
+        metadata_uri: ctx.accounts.profile_v2.metadata_uri.clone(),
     });
     Ok(())
 }

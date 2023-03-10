@@ -49,6 +49,39 @@ pub struct ProfileDeleted {
     pub timestamp: i64,
 }
 
+// This event is emitted whenever a new profile_v2 is created.
+#[event]
+pub struct ProfileV2New {
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub namespace: Namespace,
+    pub timestamp: i64,
+    pub screen_name: Pubkey,
+    pub metadata_uri: String,
+}
+
+// This event is emitted whenever a profile_v2 is updated.
+#[event]
+pub struct ProfileV2Updated {
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub namespace: Namespace,
+    pub timestamp: i64,
+    pub screen_name: Pubkey,
+    pub metadata_uri: String,
+}
+
+// This event is emitted whenever a profile_v2 is deleted.
+#[event]
+pub struct ProfileV2Deleted {
+    pub profile: Pubkey,
+    pub user: Pubkey,
+    pub namespace: Namespace,
+    pub timestamp: i64,
+    pub screen_name: Pubkey,
+    pub metadata_uri: String,
+}
+
 // This event is emitted whenever a new post is created.
 #[event]
 pub struct PostNew {
