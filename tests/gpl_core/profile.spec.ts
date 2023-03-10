@@ -21,9 +21,12 @@ describe("Profile", async () => {
   });
 
   it("should create a profile", async () => {
+    const profileMetdataUri = "https://example.com";
+    const screenName = anchor.web3.PublicKey.default;
+
     const tx = program.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA });
+      .createProfile("Personal", profileMetdataUri)
+      .accounts({ user: userPDA, screenName });
     const pubKeys = await tx.pubkeys();
     profilePDA = pubKeys.profile as anchor.web3.PublicKey;
     await tx.rpc();
@@ -49,4 +52,3 @@ describe("Profile", async () => {
     }
   });
 });
-

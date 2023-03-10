@@ -22,9 +22,11 @@ describe("Reaction", async () => {
     await userTx.rpc();
 
     // Create a profile
+    const profileMetdataUri = "https://example.com";
+    const screenName = anchor.web3.PublicKey.default;
     const profileTx = program.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA });
+      .createProfile("Personal", profileMetdataUri)
+      .accounts({ user: userPDA, screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();

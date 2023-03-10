@@ -58,9 +58,11 @@ describe("Connection Compression", async () => {
     await userTx.signers([payer]).rpc();
 
     // Set up a profile
+    const profileMetdataUri = "https://example.com";
+    const screenName = anchor.web3.PublicKey.default;
     const profileTx = gpl_core.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA, authority: payer.publicKey });
+      .createProfile("Personal", profileMetdataUri)
+      .accounts({ user: userPDA, authority: payer.publicKey, screenName });
     profilePDA = (await profileTx.pubkeys()).profile;
     await profileTx.signers([payer]).rpc();
 
@@ -78,9 +80,15 @@ describe("Connection Compression", async () => {
     await createTestUser.signers([testUser]).rpc();
 
     // Create a testProfile
+    const testProfileMetdataUri = "https://example.com";
+    const testScreenName = anchor.web3.PublicKey.default;
     const testProfile = gpl_core.methods
-      .createProfile("Personal")
-      .accounts({ user: testUserPDA, authority: testUser.publicKey });
+      .createProfile("Personal", testProfileMetdataUri)
+      .accounts({
+        user: testUserPDA,
+        authority: testUser.publicKey,
+        screenName: testScreenName,
+      });
     const testProfilePubKeys = await testProfile.pubkeys();
     testProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
 
