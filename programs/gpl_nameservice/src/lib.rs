@@ -18,6 +18,11 @@ pub mod gpl_nameservice {
     pub fn create_name_record(ctx: Context<CreateNameRecord>, name: String) -> Result<()> {
         create_name_record_handler(ctx, name)
     }
+
+    // transfer a name record
+    pub fn transfer_name_record(ctx: Context<TransferNameRecord>, name: String) -> Result<()> {
+        transfer_name_record_handler(ctx)
+    }
 }
 
 // Create a new NameRecord
@@ -53,6 +58,25 @@ pub fn create_name_record_handler(ctx: Context<CreateNameRecord>, name: String) 
         tld: ctx.accounts.tld.key(),
     });
 
+    Ok(())
+}
+
+// Transfer a NameRecord
+#[derive(Accounts)]
+pub struct TransferNameRecord<'info> {
+    #[account(mut)]
+    pub name_record: Account<'info, NameRecord>,
+
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    pub new_authority: AccountInfo<'info>,
+}
+
+// Handler to transfer a NameRecord
+pub fn transfer_name_record_handler(ctx: Context<TransferNameRecord>) -> Result<()> {
+    let name_record = &mut ctx.accounts.name_record;
+    name_record.authority = ctx.accounts.new_authority.key();
     Ok(())
 }
 
