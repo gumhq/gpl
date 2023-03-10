@@ -42,8 +42,17 @@ pub mod gpl_core {
     }
 
     // Create a new profile account
-    pub fn create_profile(ctx: Context<CreateProfile>, namespace: String) -> Result<()> {
-        create_profile_handler(ctx, namespace)
+    pub fn create_profile(
+        ctx: Context<CreateProfile>,
+        namespace: String,
+        metadata_uri: String,
+    ) -> Result<()> {
+        create_profile_handler(ctx, namespace, metadata_uri)
+    }
+
+    // update a profile account
+    pub fn update_profile(ctx: Context<UpdateProfile>, metadata_uri: String) -> Result<()> {
+        update_profile_handler(ctx, metadata_uri)
     }
 
     // Delete a profile account
@@ -51,26 +60,8 @@ pub mod gpl_core {
         delete_profile_handler(ctx)
     }
 
-    // Create a new profile v2 account
-    pub fn create_profile_v2(
-        ctx: Context<CreateProfileV2>,
-        namespace: String,
-        metadata_uri: String,
-    ) -> Result<()> {
-        create_profile_v2_handler(ctx, namespace, metadata_uri)
-    }
-
-    // update a profile v2 account
-    pub fn update_profile_v2(ctx: Context<UpdateProfileV2>, metadata_uri: String) -> Result<()> {
-        update_profile_v2_handler(ctx, metadata_uri)
-    }
-
-    // Delete a profile v2 account
-    pub fn delete_profile_v2(ctx: Context<DeleteProfileV2>) -> Result<()> {
-        delete_profile_v2_handler(ctx)
-    }
-
     // create a new profile_metadata account
+    /// DEPRECATED
     pub fn create_profile_metadata(
         ctx: Context<CreateProfileMetadata>,
         metadata_uri: String,
@@ -79,6 +70,7 @@ pub mod gpl_core {
     }
 
     // update a profile_metadata
+    /// DEPRECATED
     pub fn update_profile_metadata(
         ctx: Context<UpdateProfileMetadata>,
         metadata_uri: String,
@@ -87,6 +79,7 @@ pub mod gpl_core {
     }
 
     // delete a profile_metadata
+    /// DEPRECATED
     pub fn delete_profile_metadata(ctx: Context<DeleteProfileMetadata>) -> Result<()> {
         delete_profile_metadata_handler(ctx)
     }
