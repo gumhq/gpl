@@ -4,7 +4,6 @@ use anchor_lang::solana_program::keccak::hashv;
 declare_id!("7LEuQxAEegasvBSq7dDrMregc3mrDtTyHiytNK9pU68u");
 
 pub const MAX_NAME_LENGTH: usize = 16;
-pub const MAX_TLD_LENGTH: usize = 8;
 
 #[program]
 pub mod gpl_nameservice {
@@ -60,7 +59,16 @@ pub fn create_name_record_handler(ctx: Context<CreateNameRecord>, name: String) 
 // Transfer a NameRecord
 #[derive(Accounts)]
 pub struct TransferNameRecord<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            NameRecord::SEED_PREFIX.as_bytes(),
+            &NameRecord::hash(&name_record.name),
+            name_record.tld.key().as_ref()
+        ],
+        bump,
+        has_one = authority,
+    )]
     pub name_record: Account<'info, NameRecord>,
 
     #[account(mut)]
