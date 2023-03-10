@@ -60,9 +60,11 @@ describe("Reaction Compression", async () => {
     await userTx.signers([payer]).rpc();
 
     // Create a profile
+    const profileMetdataUri = "https://example.com";
+    const screenName = anchor.web3.PublicKey.default;
     const profileTx = gpl_core.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA, authority: payer.publicKey });
+      .createProfile("Personal", profileMetdataUri)
+      .accounts({ user: userPDA, authority: payer.publicKey, screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.signers([payer]).rpc();

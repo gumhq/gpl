@@ -57,9 +57,11 @@ describe("Post Compression", async () => {
     await userTx.signers([payer]).rpc();
 
     // Set up a profile
+    const profileMetadataUri = "https://example.com";
+    const screenName = anchor.web3.PublicKey.default;
     const profileTx = gpl_core.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA, authority: payer.publicKey });
+      .createProfile("Personal", profileMetadataUri)
+      .accounts({ user: userPDA, authority: payer.publicKey, screenName });
     profilePDA = (await profileTx.pubkeys()).profile;
     await profileTx.signers([payer]).rpc();
   });
