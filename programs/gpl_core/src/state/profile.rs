@@ -9,10 +9,16 @@ pub struct Profile {
     pub user: Pubkey,
     // The namespace that this profile is in
     pub namespace: Namespace,
+
+    // This collapses the ProfileMetadata PDA into the Profile struct.
+    pub metadata_uri: String,
+
+    // External reference to SNS, ANS or GPL Nameservice
+    pub screen_name: Pubkey,
 }
 
 impl Profile {
-    pub const LEN: usize = 8 + std::mem::size_of::<Self>();
+    pub const LEN: usize = 8 + MAX_LEN_URI + std::mem::size_of::<Self>();
 }
 
 #[derive(
@@ -27,23 +33,4 @@ pub enum Namespace {
     Gaming,
     #[strum(ascii_case_insensitive)]
     Degen,
-}
-
-// ProfileV2 is a new version of the Profile struct that we want to migrate to.
-#[account]
-pub struct ProfileV2 {
-    // The user PDA that owns this profile
-    pub user: Pubkey,
-    // The namespace that this profile is in
-    pub namespace: Namespace,
-
-    // This collapses the ProfileMetadata PDA into the Profile struct.
-    pub metadata_uri: String,
-
-    // External reference to SNS, ANS or GPL Nameservice
-    pub screen_name: Pubkey,
-}
-
-impl ProfileV2 {
-    pub const LEN: usize = 8 + MAX_LEN_URI + std::mem::size_of::<Self>();
 }

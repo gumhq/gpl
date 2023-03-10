@@ -2,7 +2,6 @@ mod connection;
 mod post;
 mod profile;
 mod profile_metadata;
-mod profile_v2;
 mod reaction;
 mod user;
 

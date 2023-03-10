@@ -4,13 +4,12 @@ use std::convert::AsRef;
 use std::str::FromStr;
 
 use crate::constants::*;
-use crate::events::{ProfileDeleted, ProfileNew};
+use crate::events::{ProfileDeleted, ProfileNew, ProfileUpdated};
 
 // Initialize a new profile account
 #[derive(Accounts)]
-#[instruction(namespace: String)]
+#[instruction(namespace: String, metadata_uri: String)]
 pub struct CreateProfile<'info> {
-    // The account that will be initialized as a Profile
     #[account(
         init,
         seeds = [
@@ -32,6 +31,10 @@ pub struct CreateProfile<'info> {
         has_one = authority,
     )]
     pub user: Account<'info, User>,
+
+    /// CHECK that this PDA is either SNS, ANS or GPL Nameservice
+    pub screen_name: AccountInfo<'info>,
+
     #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
@@ -39,17 +42,76 @@ pub struct CreateProfile<'info> {
 }
 
 // Handler to create a new Profile account
-pub fn create_profile_handler(ctx: Context<CreateProfile>, namespace: String) -> Result<()> {
-    let profile = &mut ctx.accounts.profile;
-    profile.namespace = Namespace::from_str(&namespace).unwrap();
-    profile.user = *ctx.accounts.user.to_account_info().key;
+pub fn create_profile_handler(
+    ctx: Context<CreateProfile>,
+    namespace: String,
+    metadata_uri: String,
+) -> Result<()> {
+    // TODO: validate screen_name
 
+    let profile = &mut ctx.accounts.profile;
+    profile.set_inner(Profile {
+        user: *ctx.accounts.user.to_account_info().key,
+        namespace: Namespace::from_str(&namespace).unwrap(),
+        metadata_uri,
+        screen_name: *ctx.accounts.screen_name.key,
+    });
     // Emit new profile event
     emit!(ProfileNew {
         profile: *profile.to_account_info().key,
         namespace: profile.namespace,
         user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
+        screen_name: profile.screen_name,
+        metadata_uri: profile.metadata_uri.clone(),
+    });
+    Ok(())
+}
+
+// Update a profile account
+#[derive(Accounts)]
+#[instruction(metadata_uri: String)]
+pub struct UpdateProfile<'info> {
+    #[account(
+        mut,
+        seeds = [
+            PROFILE_PREFIX_SEED.as_bytes(),
+            profile.namespace.as_ref().as_bytes(),
+            user.to_account_info().key.as_ref()
+        ],
+        bump,
+        has_one = user,
+    )]
+    pub profile: Account<'info, Profile>,
+    #[account(
+        seeds = [
+            USER_PREFIX_SEED.as_bytes(),
+            user.random_hash.as_ref(),
+        ],
+        bump,
+        has_one = authority,
+    )]
+    pub user: Account<'info, User>,
+
+    /// CHECK that this PDA is either SNS, ANS or GPL Nameservice and is owned by the user
+    pub screen_name: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub authority: Signer<'info>,
+}
+
+// Handler to update a Profile account
+pub fn update_profile_handler(ctx: Context<UpdateProfile>, metadata_uri: String) -> Result<()> {
+    let profile = &mut ctx.accounts.profile;
+    profile.metadata_uri = metadata_uri;
+    // Emit a profile update event
+    emit!(ProfileUpdated {
+        profile: *profile.to_account_info().key,
+        namespace: profile.namespace,
+        user: *ctx.accounts.user.to_account_info().key,
+        timestamp: Clock::get()?.unix_timestamp,
+        screen_name: profile.screen_name,
+        metadata_uri: profile.metadata_uri.clone(),
     });
     Ok(())
 }
@@ -57,7 +119,6 @@ pub fn create_profile_handler(ctx: Context<CreateProfile>, namespace: String) ->
 // Delete a profile account
 #[derive(Accounts)]
 pub struct DeleteProfile<'info> {
-    // The Profile account to delete
     #[account(
         mut,
         seeds = [
@@ -91,6 +152,8 @@ pub fn delete_profile_handler(ctx: Context<DeleteProfile>) -> Result<()> {
         namespace: ctx.accounts.profile.namespace,
         user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
+        screen_name: ctx.accounts.profile.screen_name,
+        metadata_uri: ctx.accounts.profile.metadata_uri.clone(),
     });
     Ok(())
 }
