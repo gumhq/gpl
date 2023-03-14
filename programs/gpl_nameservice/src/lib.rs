@@ -127,7 +127,7 @@ pub struct TransferNameRecord<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    pub new_authority: AccountInfo<'info>,
+    pub new_authority: SystemAccount<'info>,
 }
 
 // Handler to transfer a NameRecord
