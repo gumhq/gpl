@@ -1,6 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::keccak::hashv;
 
+mod nameservice;
+
+pub use nameservice::*;
+
 declare_id!("7LEuQxAEegasvBSq7dDrMregc3mrDtTyHiytNK9pU68u");
 
 #[program]
@@ -135,6 +139,7 @@ pub fn transfer_name_record_handler(ctx: Context<TransferNameRecord>) -> Result<
 
 // NameRecord Account
 #[account]
+#[derive(Debug)]
 pub struct NameRecord {
     pub name: String,
     pub authority: Pubkey,
@@ -171,4 +176,10 @@ pub enum NameServiceError {
     TldTooLong,
     #[msg("Name is already taken.")]
     NameTaken,
+    #[msg("The PDA is not issued by a supported name service program")]
+    InvalidNameService,
+    InvalidOwner,
+    InvalidDataLength,
+    InvalidAuthority,
+    InvalidNameRecord,
 }

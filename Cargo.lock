@@ -604,6 +604,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "gpl_nameservice"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+]
+
+[[package]]
 name = "gpl_session"
 version = "0.1.0"
 dependencies = [
