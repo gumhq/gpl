@@ -6,6 +6,8 @@ use std::str::FromStr;
 use crate::constants::*;
 use crate::events::{ProfileDeleted, ProfileNew, ProfileUpdated};
 
+use gpl_nameservice::validate as validate_screen_name;
+
 // Initialize a new profile account
 #[derive(Accounts)]
 #[instruction(namespace: String, metadata_uri: String)]
@@ -33,6 +35,9 @@ pub struct CreateProfile<'info> {
     pub user: Account<'info, User>,
 
     /// CHECK that this PDA is either SNS, ANS or GPL Nameservice
+    #[account(
+        constraint = validate_screen_name(&[screen_name.clone(), authority.to_account_info()])?,
+    )]
     pub screen_name: AccountInfo<'info>,
 
     #[account(mut)]

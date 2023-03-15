@@ -598,6 +598,7 @@ name = "gpl_core"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "gpl_nameservice",
  "solana-security-txt",
  "strum",
  "strum_macros",
