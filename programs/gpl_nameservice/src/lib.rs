@@ -35,7 +35,7 @@ pub struct CreateTLDAsNameRecord<'info> {
         init,
         seeds = [NameRecord::SEED_PREFIX.as_bytes(), &NameRecord::hash(&tld), Pubkey::default().as_ref()],
         bump,
-        space = 8 + NameRecord::LEN,
+        space = NameRecord::LEN,
         payer = authority,
     )]
     pub name_record: Account<'info, NameRecord>,
@@ -74,7 +74,7 @@ pub struct CreateNameRecord<'info> {
         init,
         seeds = [NameRecord::SEED_PREFIX.as_bytes(), &NameRecord::hash(&name), domain.key().as_ref()],
         bump,
-        space = 8 + NameRecord::LEN,
+        space = NameRecord::LEN,
         payer = authority,
     )]
     pub name_record: Account<'info, NameRecord>,
@@ -149,7 +149,7 @@ pub struct NameRecord {
 }
 
 impl NameRecord {
-    pub const MAX_NAME_LENGTH: usize = 16;
+    pub const MAX_NAME_LENGTH: usize = 32;
 
     pub const MAX_TLD_LENGTH: usize = 8;
 

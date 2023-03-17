@@ -30,9 +30,10 @@ impl NameServiceParser for SNSNameService {
         "namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX"
     }
 
-    fn unpack(data: &[u8]) -> Result<SNSNameRecord> {
-        let record = SNSNameRecord::try_from_slice(&data)?;
-        Ok(record)
+    fn unpack(record: &AccountInfo) -> Result<SNSNameRecord> {
+        // Check disciminator
+        let name_record = SNSNameRecord::try_from_slice(&mut &record.data.borrow_mut()[..])?;
+        Ok(name_record)
     }
 
     fn from_program_id(program_id: &Pubkey) -> Option<Self>
@@ -59,8 +60,7 @@ impl NameServiceParser for SNSNameService {
             return Err(NameServiceError::InvalidDataLength.into());
         }
 
-        let record_data = &record.try_borrow_data()?;
-        let name_record = Self::unpack(&record_data)?;
+        let name_record = Self::unpack(record)?;
 
         // The authority should be the same as the owner in the record
         if authority.key != &name_record.owner {
