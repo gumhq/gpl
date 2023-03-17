@@ -2,6 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import randombytes from "randombytes";
 import { expect } from "chai";
 import { GplCore } from "../../target/types/gpl_core";
+import { createGumDomain, createGumTld } from "../utils";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 
@@ -21,9 +22,11 @@ describe("Reaction", async () => {
     userPDA = userPubKeys.user as anchor.web3.PublicKey;
     await userTx.rpc();
 
+    const gumTld = await createGumTld();
+    const screenName = await createGumDomain(gumTld, "foobarasdfas");
+
     // Create a profile
     const profileMetdataUri = "https://example.com";
-    const screenName = anchor.web3.PublicKey.default;
     const profileTx = program.methods
       .createProfile("Personal", profileMetdataUri)
       .accounts({ user: userPDA, screenName });

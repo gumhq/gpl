@@ -1,10 +1,11 @@
 import * as anchor from "@project-serum/anchor";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import randombytes from "randombytes";
-import { airdrop } from "../utils";
+import { airdrop, gumTld } from "../utils";
 import { expect } from "chai";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import { GplCore } from "../../target/types/gpl_core";
+import { createGumDomain, createGumTld } from "../utils";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 
@@ -32,9 +33,11 @@ describe("Connection", async () => {
     userPDA = userPubKeys.user as anchor.web3.PublicKey;
     await userTx.rpc();
 
+    const gumTld = await createGumTld();
+    const screenName = await createGumDomain(gumTld, "foobar");
+
     // Create a profile
     const profileMetdataUri = "https://example.com";
-    const screenName = anchor.web3.PublicKey.default;
     const profileTx = program.methods
       .createProfile("Personal", profileMetdataUri)
       .accounts({ user: userPDA, screenName });
@@ -67,7 +70,7 @@ describe("Connection", async () => {
 
     // Create a testProfile
     const testProfileMetdataUri = "https://example.com";
-    const testScreenName = anchor.web3.PublicKey.default;
+    const testScreenName = await createGumDomain(gumTld, "test", testUser);
     const testProfile = program.methods
       .createProfile("Personal", testProfileMetdataUri)
       .accounts({

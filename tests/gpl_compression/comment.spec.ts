@@ -21,6 +21,10 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { expect } from "chai";
 import randomBytes from "randombytes";
 
+import { createGumDomain, createGumTld } from "../utils/index";
+
+import { faker } from "@faker-js/faker";
+
 anchor.setProvider(anchor.AnchorProvider.env());
 const rpcConnection = anchor.getProvider().connection;
 
@@ -59,9 +63,15 @@ describe("Comment Compression", async () => {
     userPDA = userPubKeys.user as anchor.web3.PublicKey;
     await userTx.signers([payer]).rpc();
 
+    const gumTld = await createGumTld();
+
     // Create a profile
     const profileMetdataUri = "https://example.com";
-    const screenName = anchor.web3.PublicKey.default;
+    const screenName = await createGumDomain(
+      gumTld,
+      faker.internet.userName(),
+      payer
+    );
     const profileTx = gpl_core.methods
       .createProfile("Personal", profileMetdataUri)
       .accounts({ user: userPDA, authority: payer.publicKey, screenName });

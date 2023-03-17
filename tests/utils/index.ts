@@ -9,6 +9,7 @@ import {
 
 import { GplCompression } from "../../target/types/gpl_compression";
 import { GplCore } from "../../target/types/gpl_core";
+import { GplNameservice } from "../../target/types/gpl_nameservice";
 import pkg from "js-sha3";
 
 import {
@@ -27,6 +28,70 @@ const provider = anchor.getProvider();
 export const gpl_core = anchor.workspace.GplCore as anchor.Program<GplCore>;
 export const gpl_compression = anchor.workspace
   .GplCompression as anchor.Program<GplCompression>;
+export const gpl_nameservice = anchor.workspace
+  .GplNameservice as anchor.Program<GplNameservice>;
+
+// keccak256 hash of "gum"
+const gumTldHash = keccak_256("gum");
+
+const [gumTld, _] = anchor.web3.PublicKey.findProgramAddressSync(
+  [
+    Buffer.from("name_record"),
+    Buffer.from(gumTldHash, "hex"),
+    anchor.web3.PublicKey.default.toBuffer(),
+  ],
+  gpl_nameservice.programId
+);
+
+export async function createGumTld(): Promise<PublicKey> {
+  try {
+    await gpl_nameservice.account.nameRecord.fetch(gumTld);
+  } catch (error: any) {
+    await gpl_nameservice.methods
+      .createTld("gum")
+      .accounts({
+        nameRecord: gumTld,
+      })
+      .rpc();
+  }
+  return gumTld;
+}
+
+export async function createGumDomain(
+  gumTld: PublicKey,
+  domain: string,
+  owner?: Keypair
+): Promise<PublicKey> {
+  // keccak256 hash of domain
+  const domainHash = keccak_256(domain);
+  const [nameRecord, _] = await anchor.web3.PublicKey.findProgramAddress(
+    [
+      Buffer.from("name_record"),
+      Buffer.from(domainHash, "hex"),
+      gumTld.toBuffer(),
+    ],
+    gpl_nameservice.programId
+  );
+
+  let signers: Keypair[] = [];
+
+  if (owner !== undefined) {
+    signers.push(owner);
+  }
+
+  await gpl_nameservice.methods
+    .createNameRecord(domain)
+    .accounts({
+      domain: gumTld,
+      nameRecord,
+      // @ts-ignore
+      authority: owner?.publicKey || provider.wallet.publicKey,
+    })
+    .signers(signers)
+    .rpc();
+
+  return nameRecord;
+}
 
 export function assert_tree(
   onChainTree: ConcurrentMerkleTreeAccount,

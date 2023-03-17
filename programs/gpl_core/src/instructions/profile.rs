@@ -52,8 +52,6 @@ pub fn create_profile_handler(
     namespace: String,
     metadata_uri: String,
 ) -> Result<()> {
-    // TODO: validate screen_name
-
     let profile = &mut ctx.accounts.profile;
     profile.set_inner(Profile {
         user: *ctx.accounts.user.to_account_info().key,

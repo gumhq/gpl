@@ -7,6 +7,8 @@ import {
   setupTree,
   to_leaf,
   assert_tree,
+  createGumTld,
+  createGumDomain,
 } from "../utils/index";
 
 import {
@@ -18,8 +20,9 @@ import {
 
 import { Keypair, PublicKey } from "@solana/web3.js";
 
-import { expect } from "chai";
 import randomBytes from "randombytes";
+
+import { faker } from "@faker-js/faker";
 
 anchor.setProvider(anchor.AnchorProvider.env());
 const rpcConnection = anchor.getProvider().connection;
@@ -56,9 +59,16 @@ describe("Post Compression", async () => {
     userPDA = (await userTx.pubkeys()).user;
     await userTx.signers([payer]).rpc();
 
+    const gumTld = await createGumTld();
+
     // Set up a profile
     const profileMetadataUri = "https://example.com";
-    const screenName = anchor.web3.PublicKey.default;
+
+    const screenName = await createGumDomain(
+      gumTld,
+      faker.internet.userName(),
+      payer
+    );
     const profileTx = gpl_core.methods
       .createProfile("Personal", profileMetadataUri)
       .accounts({ user: userPDA, authority: payer.publicKey, screenName });
