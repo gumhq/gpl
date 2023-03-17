@@ -1,5 +1,3 @@
-use anchor_lang::Discriminator;
-
 use crate::nameservice::NameServiceParser;
 use crate::NameRecord;
 use anchor_lang::prelude::*;
@@ -12,9 +10,9 @@ impl NameServiceParser for GplNameService {
         "7LEuQxAEegasvBSq7dDrMregc3mrDtTyHiytNK9pU68u"
     }
 
-    fn unpack(data: &[u8]) -> Result<NameRecord> {
-        let record = NameRecord::try_from_slice(&data[8..])?;
-        Ok(record)
+    fn unpack(record: &AccountInfo) -> Result<NameRecord> {
+        let name_record = NameRecord::try_deserialize(&mut &record.data.borrow_mut()[..])?;
+        Ok(name_record)
     }
 
     fn from_program_id(program_id: &Pubkey) -> Option<Self>
@@ -38,14 +36,7 @@ impl NameServiceParser for GplNameService {
         // Validate the owner
         Self::validate_owner(record)?;
 
-        let record_data = &record.try_borrow_data()?;
-
-        // The first 8 bytes should be same as the discriminator
-        if record_data[0..8] != NameRecord::DISCRIMINATOR {
-            return Err(ProgramError::InvalidAccountData.into());
-        }
-
-        let name_record = Self::unpack(&record_data)?;
+        let name_record = Self::unpack(record)?;
 
         // record.key should be the same as the PDA generated from NameRecord::SEED_PREFIX, hash of
         // the name, domain key and the bump seed

@@ -30,9 +30,10 @@ impl NameServiceParser for ANSNameService {
         "ALTNSZ46uaAUU7XUV6awvdorLGqAsPwa9shm7h4uP2FK"
     }
 
-    fn unpack(data: &[u8]) -> Result<ANSNameRecord> {
-        let record = ANSNameRecord::try_from_slice(&data)?;
-        Ok(record)
+    fn unpack(record: &AccountInfo) -> Result<ANSNameRecord> {
+        // TODO: Check disciminator
+        let name_record = ANSNameRecord::try_from_slice(&mut &record.data.borrow_mut()[..])?;
+        Ok(name_record)
     }
 
     fn from_program_id(program_id: &Pubkey) -> Option<Self>
@@ -60,8 +61,7 @@ impl NameServiceParser for ANSNameService {
             return Err(NameServiceError::InvalidDataLength.into());
         }
 
-        let record_data = &record.try_borrow_data()?;
-        let name_record = Self::unpack(&record_data)?;
+        let name_record = Self::unpack(record)?;
 
         // The authority should be the same as the owner in the record
         if authority.key != &name_record.owner {

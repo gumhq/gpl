@@ -13,6 +13,7 @@ mod sns;
 
 pub use nameservice_parser::*;
 
+#[derive(Debug)]
 enum NameService {
     GplNameService,
     SNSNameService,

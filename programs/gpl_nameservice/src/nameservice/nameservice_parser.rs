@@ -10,7 +10,7 @@ pub trait NameServiceParser {
         // Unwrap because this is infallible
         Pubkey::from_str(Self::id_str()).unwrap()
     }
-    fn unpack(data: &[u8]) -> Result<Self::ServiceName>;
+    fn unpack(record: &AccountInfo) -> Result<Self::ServiceName>;
 
     fn from_program_id(program_id: &Pubkey) -> Option<Self>
     where
