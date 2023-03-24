@@ -34,4 +34,5 @@ pub enum ReactionType {
     Sad,
     #[strum(ascii_case_insensitive)]
     Angry,
+    CustomReaction([u8; 32]),
 }
