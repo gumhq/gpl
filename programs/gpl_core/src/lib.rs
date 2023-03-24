@@ -131,4 +131,48 @@ pub mod gpl_core {
     pub fn delete_reaction(ctx: Context<DeleteReaction>) -> Result<()> {
         delete_reaction_handler(ctx)
     }
+
+    // create a badge account
+    pub fn create_badge(ctx: Context<CreateBadge>, metadata_uri: String) -> Result<()> {
+        create_badge_handler(ctx, metadata_uri)
+    }
+
+    // update a badge
+    pub fn update_badge(ctx: Context<UpdateBadge>, metadata_uri: String) -> Result<()> {
+        update_badge_handler(ctx, metadata_uri)
+    }
+
+    // burn a badge
+    pub fn burn_badge(ctx: Context<BurnBadge>) -> Result<()> {
+        burn_badge_handler(ctx)
+    }
+
+    // create an issuer account
+    pub fn create_issuer(ctx: Context<CreateIssuer>) -> Result<()> {
+        create_issuer_handler(ctx)
+    }
+
+    // delete an issuer
+    pub fn delete_issuer(ctx: Context<DeleteIssuer>) -> Result<()> {
+        delete_issuer_handler(ctx)
+    }
+
+    // create a schema account
+    pub fn create_schema(
+        ctx: Context<CreateSchema>,
+        metadata_uri: String,
+        random_hash: [u8; 32],
+    ) -> Result<()> {
+        create_schema_handler(ctx, metadata_uri, random_hash)
+    }
+
+    // update a schema
+    pub fn update_schema(ctx: Context<UpdateSchema>, metadata_uri: String) -> Result<()> {
+        update_schema_handler(ctx, metadata_uri)
+    }
+
+    // delete a schema
+    pub fn delete_schema(ctx: Context<DeleteSchema>) -> Result<()> {
+        delete_schema_handler(ctx)
+    }
 }

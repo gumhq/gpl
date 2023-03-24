@@ -1,3 +1,4 @@
+mod badge;
 mod connection;
 mod post;
 mod profile;
@@ -5,6 +6,7 @@ mod profile_metadata;
 mod reaction;
 mod user;
 
+pub use badge::*;
 pub use connection::*;
 pub use post::*;
 pub use profile::*;

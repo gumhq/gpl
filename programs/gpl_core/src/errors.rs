@@ -1,12 +1,9 @@
 use anchor_lang::prelude::*;
 
-#[allow(dead_code)]
+#[error_code]
 pub enum GumError {
-    PostError,
-    ProfileError,
-    UserError,
-    ReactionError,
-    ConnectionError,
+    URITooLong,
+    CannotConnectToSelf,
 }
 
 #[error_code]
