@@ -616,6 +616,7 @@ name = "gpl_session"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "solana-security-txt",
 ]
 
 [[package]]
