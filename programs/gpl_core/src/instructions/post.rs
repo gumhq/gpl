@@ -7,6 +7,9 @@ use std::convert::AsRef;
 
 use crate::constants::*;
 
+use gpl_session::program::GplSession;
+use gpl_session::SessionToken;
+
 // Create Post
 #[derive(Accounts)]
 #[instruction(metadata_uri: String, random_hash: [u8;32])]
@@ -39,9 +42,24 @@ pub struct CreatePost<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
+        // Better implemented as a function
+        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
+
+    #[account(
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            session_token.target_program.key().as_ref(),
+            session_token.session_signer.key().as_ref(),
+            session_token.authority.key().as_ref()
+        ],
+        seeds::program = GplSession::id(),
+        bump,
+        constraint = session_token.is_valid()?,
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
+
     #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
@@ -104,9 +122,22 @@ pub struct UpdatePost<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
+        // Better implemented as a function
+        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
+    #[account(
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            session_token.target_program.key().as_ref(),
+            session_token.session_signer.key().as_ref(),
+            session_token.authority.key().as_ref()
+        ],
+        seeds::program = GplSession::id(),
+        bump,
+        constraint = session_token.is_valid()?,
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -161,7 +192,8 @@ pub struct CreateComment<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
+        // Better implemented as a function
+        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
     #[account(
@@ -172,6 +204,18 @@ pub struct CreateComment<'info> {
         bump,
     )]
     pub reply_to: Account<'info, Post>,
+    #[account(
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            session_token.target_program.key().as_ref(),
+            session_token.session_signer.key().as_ref(),
+            session_token.authority.key().as_ref()
+        ],
+        seeds::program = GplSession::id(),
+        bump,
+        constraint = session_token.is_valid()?,
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
@@ -217,7 +261,7 @@ pub struct DeletePost<'info> {
         ],
         bump,
         has_one = profile,
-        close = authority,
+        close = refund_receiver,
     )]
     pub post: Account<'info, Post>,
     #[account(
@@ -236,11 +280,27 @@ pub struct DeletePost<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
+        // Better implemented as a function
+        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
+
+    #[account(
+        seeds = [
+            SessionToken::SEED_PREFIX.as_bytes(),
+            session_token.target_program.key().as_ref(),
+            session_token.session_signer.key().as_ref(),
+            session_token.authority.key().as_ref()
+        ],
+        seeds::program = GplSession::id(),
+        bump,
+        constraint = session_token.is_valid()?,
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
     pub authority: Signer<'info>,
+    #[account(mut, constraint = refund_receiver.key() == user.authority)]
+    pub refund_receiver: SystemAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 

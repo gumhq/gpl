@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_lang::system_program;
 
 declare_id!("3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE");
@@ -43,6 +44,7 @@ pub struct CreateSessionToken<'info> {
     )]
     pub session_token: Account<'info, SessionToken>,
 
+    #[account(mut)]
     pub session_signer: Signer<'info>,
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -85,7 +87,7 @@ pub fn create_session_token_handler(
                     to: ctx.accounts.session_signer.to_account_info(),
                 },
             ),
-            100000,
+            LAMPORTS_PER_SOL.checked_div(100).unwrap(),
         )?;
     }
 
@@ -130,6 +132,7 @@ pub fn revoke_session_token_handler(_: Context<RevokeSessionToken>) -> Result<()
 
 // SessionToken Account
 #[account]
+#[derive(Copy)]
 pub struct SessionToken {
     pub authority: Pubkey,
     pub target_program: Pubkey,

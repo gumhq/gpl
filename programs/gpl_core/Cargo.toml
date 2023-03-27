@@ -16,7 +16,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.26.0"
+anchor-lang = { version = "0.26.0" }
+gpl_session = { version = "0.1.0", path = "../gpl_session", features = ["no-entrypoint"] }
 solana-security-txt = "1.1.0"
 strum = "0.24.1"
 strum_macros = "0.24.3"
