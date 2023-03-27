@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_lang::system_program;
-
 declare_id!("3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE");
 
 #[cfg(not(feature = "no-entrypoint"))]
