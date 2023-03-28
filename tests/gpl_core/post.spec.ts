@@ -102,15 +102,22 @@ describe("Post", async () => {
 
       // Create a user
       const randomHash = randombytes(32);
-      const userTx = program.methods.createUser(randomHash)
+      const userTx = program.methods
+        .createUser(randomHash)
         .accounts({ authority: randomUser.publicKey });
       const userPubKeys = await userTx.pubkeys();
       randomUserPDA = userPubKeys.user;
       const tx = await userTx.transaction();
       tx.recentBlockhash = (await rpcConnection.getRecentBlockhash()).blockhash;
       tx.feePayer = randomUser.publicKey;
-      const signedTestUserTransaction = await randomUserWallet.signTransaction(tx);
-      await sendAndConfirmTransaction(rpcConnection, signedTestUserTransaction, [randomUser]);
+      const signedTestUserTransaction = await randomUserWallet.signTransaction(
+        tx
+      );
+      await sendAndConfirmTransaction(
+        rpcConnection,
+        signedTestUserTransaction,
+        [randomUser]
+      );
 
       // Create a profile
       const testProfile = program.methods
@@ -175,11 +182,8 @@ describe("Post", async () => {
       try {
         await post.signers([randomUser]).rpc();
       } catch (error: any) {
-        console.log(error);
         expect(error).to.be.an("error");
-        expect(error.toString()).to.contain(
-          "Error Code: ConstraintRaw"
-        );
+        expect(error.toString()).to.contain("Error Code: ConstraintRaw");
       }
     });
 
@@ -199,11 +203,8 @@ describe("Post", async () => {
       try {
         await post.signers([sessionKeypair]).rpc();
       } catch (error: any) {
-        console.log(error);
         expect(error).to.be.an("error");
-        expect(error.toString()).to.contain(
-          "Error: unknown signer"
-        );
+        expect(error.toString()).to.contain("Error: unknown signer");
       }
     });
 
