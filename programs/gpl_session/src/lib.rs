@@ -5,7 +5,7 @@ use anchor_lang::system_program;
 declare_id!("3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE");
 
 #[cfg(not(feature = "no-entrypoint"))]
-security_txt! {
+solana_security_txt::security_txt! {
     name: "gpl_session",
     project_url: "https://gum.fun",
     contacts: "email:hello@gum.fun,twitter:@gumisfunn",
