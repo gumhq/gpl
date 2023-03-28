@@ -63,7 +63,7 @@ pub struct CreateConnection<'info> {
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()?,
+        constraint = session_token.is_valid()? && session_token.session_signer.key() == authority.key(),
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -151,7 +151,7 @@ pub struct DeleteConnection<'info> {
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()?,
+        constraint = session_token.is_valid()? && session_token.session_signer.key() == authority.key(),
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 

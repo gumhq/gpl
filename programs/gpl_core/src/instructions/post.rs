@@ -56,7 +56,7 @@ pub struct CreatePost<'info> {
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()?,
+        constraint = session_token.is_valid()? && session_token.session_signer.key() == authority.key(),
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -135,7 +135,7 @@ pub struct UpdatePost<'info> {
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()?,
+        constraint = session_token.is_valid()? && session_token.session_signer.key() == authority.key(),
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -213,7 +213,7 @@ pub struct CreateComment<'info> {
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()?,
+        constraint = session_token.is_valid()? && session_token.session_signer.key() == authority.key(),
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -294,7 +294,7 @@ pub struct DeletePost<'info> {
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()?,
+        constraint = session_token.is_valid()? && session_token.session_signer.key() == authority.key(),
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
