@@ -50,7 +50,7 @@ pub struct CreatePost<'info> {
     #[account(
         seeds = [
             SessionToken::SEED_PREFIX.as_bytes(),
-            session_token.target_program.key().as_ref(),
+            crate::id().as_ref(),
             session_token.session_signer.key().as_ref(),
             session_token.authority.key().as_ref()
         ],
@@ -288,7 +288,7 @@ pub struct DeletePost<'info> {
     #[account(
         seeds = [
             SessionToken::SEED_PREFIX.as_bytes(),
-            session_token.target_program.key().as_ref(),
+            crate::id().as_ref(),
             session_token.session_signer.key().as_ref(),
             session_token.authority.key().as_ref()
         ],
