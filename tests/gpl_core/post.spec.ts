@@ -183,7 +183,7 @@ describe("Post", async () => {
         await post.signers([randomUser]).rpc();
       } catch (error: any) {
         expect(error).to.be.an("error");
-        expect(error.toString()).to.contain("Error Code: ConstraintRaw");
+        expect(error.toString()).to.contain("Error Code: ConstraintSeeds");
       }
     });
 

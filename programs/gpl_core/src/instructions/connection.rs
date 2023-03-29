@@ -58,12 +58,14 @@ pub struct CreateConnection<'info> {
         seeds = [
             SessionToken::SEED_PREFIX.as_bytes(),
             crate::id().as_ref(),
-            session_token.session_signer.key().as_ref(),
-            session_token.authority.key().as_ref()
+            // Session Signer
+            authority.key().as_ref(),
+            // User Authority
+            user.authority.as_ref(),
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()? && session_token.session_signer.key() == authority.key(),
+        constraint = session_token.is_valid()?
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -146,12 +148,14 @@ pub struct DeleteConnection<'info> {
         seeds = [
             SessionToken::SEED_PREFIX.as_bytes(),
             crate::id().as_ref(),
-            session_token.session_signer.key().as_ref(),
-            session_token.authority.key().as_ref()
+            // Session Signer
+            authority.key().as_ref(),
+            // User Authority
+            user.authority.as_ref(),
         ],
         seeds::program = GplSession::id(),
         bump,
-        constraint = session_token.is_valid()? && session_token.session_signer.key() == authority.key(),
+        constraint = session_token.is_valid()?
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
