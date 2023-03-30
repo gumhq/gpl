@@ -1,7 +1,6 @@
 use crate::state::{Connection, Profile, User};
 use anchor_lang::prelude::*;
-use gpl_session::program::GplSession;
-use gpl_session::SessionToken;
+use gpl_session::{SessionToken, ValidityChecker};
 use std::convert::AsRef;
 
 use crate::constants::*;
@@ -55,17 +54,12 @@ pub struct CreateConnection<'info> {
     pub user: Account<'info, User>,
 
     #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+        constraint = session_token.validate(ValidityChecker {
+            session_token: session_token.clone(),
+            authority: user.authority.key(),
+            target_program: crate::id(),
+            session_signer: authority.key(),
+        })?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -145,17 +139,12 @@ pub struct DeleteConnection<'info> {
     )]
     pub user: Account<'info, User>,
     #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+        constraint = session_token.validate(ValidityChecker {
+            session_token: session_token.clone(),
+            authority: user.authority.key(),
+            target_program: crate::id(),
+            session_signer: authority.key(),
+        })?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 

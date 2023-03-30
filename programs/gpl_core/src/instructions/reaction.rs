@@ -1,12 +1,11 @@
 use crate::state::{Post, Profile, Reaction, ReactionType, User};
 use anchor_lang::prelude::*;
-use gpl_session::program::GplSession;
-use gpl_session::SessionToken;
 use std::convert::AsRef;
 use std::str::FromStr;
 
 use crate::constants::*;
 use crate::events::{ReactionDeleted, ReactionNew};
+use gpl_session::{SessionToken, ValidityChecker};
 
 // Create a reaction to a post from a profile
 #[derive(Accounts)]
@@ -56,17 +55,12 @@ pub struct CreateReaction<'info> {
     pub user: Account<'info, User>,
 
     #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+        constraint = session_token.validate(ValidityChecker {
+            session_token: session_token.clone(),
+            authority: user.authority.key(),
+            target_program: crate::id(),
+            session_signer: authority.key(),
+        })?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -144,17 +138,12 @@ pub struct DeleteReaction<'info> {
     pub user: Account<'info, User>,
 
     #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+        constraint = session_token.validate(ValidityChecker {
+            session_token: session_token.clone(),
+            authority: user.authority.key(),
+            target_program: crate::id(),
+            session_signer: authority.key(),
+        })?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]

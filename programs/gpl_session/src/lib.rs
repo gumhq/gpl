@@ -139,6 +139,13 @@ pub fn revoke_session_token_handler(_: Context<RevokeSessionToken>) -> Result<()
     Ok(())
 }
 
+pub struct ValidityChecker<'info> {
+    pub session_token: Account<'info, SessionToken>,
+    pub session_signer: Pubkey,
+    pub authority: Pubkey,
+    pub target_program: Pubkey,
+}
+
 // SessionToken Account
 #[account]
 #[derive(Copy)]
@@ -153,10 +160,31 @@ impl SessionToken {
     pub const LEN: usize = 8 + std::mem::size_of::<Self>();
     pub const SEED_PREFIX: &'static str = "session_token";
 
-    // check if the token is valid
-    pub fn is_valid(&self) -> Result<bool> {
+    fn is_expired(&self) -> Result<bool> {
         let now = Clock::get()?.unix_timestamp;
         Ok(now < self.valid_until)
+    }
+
+    // validate the token
+    pub fn validate(&self, ctx: ValidityChecker) -> Result<bool> {
+        let target_program = ctx.target_program;
+        let session_signer = ctx.session_signer;
+        let authority = ctx.authority.key();
+
+        // Check the PDA seeds
+        let seeds = &[
+            SessionToken::SEED_PREFIX.as_bytes(),
+            target_program.as_ref(),
+            session_signer.as_ref(),
+            authority.as_ref(),
+        ];
+
+        let (pda, _) = Pubkey::find_program_address(seeds, &crate::id());
+
+        require_eq!(pda, ctx.session_token.key(), SessionError::InvalidToken);
+
+        // Check if the token has expired
+        self.is_expired()
     }
 }
 
@@ -164,4 +192,6 @@ impl SessionToken {
 pub enum SessionError {
     #[msg("Requested validity is too long")]
     ValidityTooLong,
+    #[msg("Invalid session token")]
+    InvalidToken,
 }

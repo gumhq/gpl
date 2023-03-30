@@ -7,8 +7,7 @@ use std::convert::AsRef;
 
 use crate::constants::*;
 
-use gpl_session::program::GplSession;
-use gpl_session::SessionToken;
+use gpl_session::{SessionToken, ValidityChecker};
 
 // Create Post
 #[derive(Accounts)]
@@ -48,17 +47,12 @@ pub struct CreatePost<'info> {
     pub user: Account<'info, User>,
 
     #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?,
+        constraint = session_token.validate(ValidityChecker {
+            session_token: session_token.clone(),
+            authority: user.authority.key(),
+            target_program: crate::id(),
+            session_signer: authority.key(),
+        })?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -129,17 +123,12 @@ pub struct UpdatePost<'info> {
     )]
     pub user: Account<'info, User>,
     #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?,
+        constraint = session_token.validate(ValidityChecker {
+            session_token: session_token.clone(),
+            authority: user.authority.key(),
+            target_program: crate::id(),
+            session_signer: authority.key(),
+        })?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -209,17 +198,12 @@ pub struct CreateComment<'info> {
     )]
     pub reply_to: Account<'info, Post>,
     #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+        constraint = session_token.validate(ValidityChecker {
+            session_token: session_token.clone(),
+            authority: user.authority.key(),
+            target_program: crate::id(),
+            session_signer: authority.key(),
+        })?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -290,19 +274,13 @@ pub struct DeletePost<'info> {
         constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
-
     #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+        constraint = session_token.validate(ValidityChecker {
+            session_token: session_token.clone(),
+            authority: user.authority.key(),
+            target_program: crate::id(),
+            session_signer: authority.key(),
+        })?,
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
