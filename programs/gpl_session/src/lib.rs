@@ -190,15 +190,15 @@ impl SessionToken {
 }
 
 pub trait Session<'info> {
-    fn session_token(&self) -> Account<'info, SessionToken>;
+    fn session_token(&self) -> Option<Account<'info, SessionToken>>;
     fn session_signer(&self) -> Pubkey;
     fn authority(&self) -> Pubkey;
     fn target_program(&self) -> Pubkey;
 
     fn is_valid(&self) -> Result<bool> {
-        let session_token = self.session_token();
+        let session_token = self.session_token().ok_or(SessionError::NoToken)?;
         let validity_ctx = ValidityChecker {
-            session_token: self.session_token(),
+            session_token: session_token.clone(),
             session_signer: self.session_signer(),
             authority: self.authority(),
             target_program: self.target_program(),
@@ -214,4 +214,6 @@ pub enum SessionError {
     ValidityTooLong,
     #[msg("Invalid session token")]
     InvalidToken,
+    #[msg("No session token provided")]
+    NoToken,
 }

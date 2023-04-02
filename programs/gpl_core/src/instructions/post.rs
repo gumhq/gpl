@@ -1,7 +1,7 @@
 use crate::errors::{GumError, PostError};
 use crate::events::{PostCommentNew, PostDeleted, PostNew, PostUpdated};
 use crate::state::{Post, Profile, User, MAX_LEN_URI};
-use gpl_session::gpl_session::Session;
+use gpl_session::gpl_session::{session_auth_or, Session};
 use gpl_session::Session;
 
 use anchor_lang::prelude::*;
@@ -59,28 +59,15 @@ pub struct CreatePost<'info> {
 }
 
 // Handler to create a new Post account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn create_post_handler(
     ctx: Context<CreatePost>,
     metadata_uri: String,
     random_hash: [u8; 32],
 ) -> Result<()> {
-    // TODO: Extract into macro
-    let session_token = ctx.accounts.session_token.clone();
-    if let Some(token) = session_token {
-        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
-        require_eq!(
-            ctx.accounts.user.authority,
-            token.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    } else {
-        require_eq!(
-            ctx.accounts.user.authority,
-            ctx.accounts.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    }
-
     // CHECK metadata_uri length
     require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
 
@@ -144,22 +131,11 @@ pub struct UpdatePost<'info> {
 }
 
 // Handler to update a Post account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String) -> Result<()> {
-    let session_token = ctx.accounts.session_token.clone();
-    if let Some(token) = session_token {
-        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
-        require_eq!(
-            ctx.accounts.user.authority,
-            token.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    } else {
-        require_eq!(
-            ctx.accounts.user.authority,
-            ctx.accounts.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    }
     // CHECK metadata_uri length
     require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
     let post = &mut ctx.accounts.post;
@@ -229,26 +205,15 @@ pub struct CreateComment<'info> {
 }
 
 // Handler to add a comment to a post
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn create_comment_handler(
     ctx: Context<CreateComment>,
     metadata_uri: String,
     random_hash: [u8; 32],
 ) -> Result<()> {
-    let session_token = ctx.accounts.session_token.clone();
-    if let Some(token) = session_token {
-        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
-        require_eq!(
-            ctx.accounts.user.authority,
-            token.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    } else {
-        require_eq!(
-            ctx.accounts.user.authority,
-            ctx.accounts.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    }
     // Check metadata_uri length
     require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
 
@@ -317,22 +282,11 @@ pub struct DeletePost<'info> {
 }
 
 // Handler to delete a Post account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn delete_post_handler(ctx: Context<DeletePost>) -> Result<()> {
-    let session_token = ctx.accounts.session_token.clone();
-    if let Some(token) = session_token {
-        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
-        require_eq!(
-            ctx.accounts.user.authority,
-            token.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    } else {
-        require_eq!(
-            ctx.accounts.user.authority,
-            ctx.accounts.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    }
     // emit delete post event
     emit!(PostDeleted {
         post: *ctx.accounts.post.to_account_info().key,

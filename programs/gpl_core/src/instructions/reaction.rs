@@ -1,12 +1,13 @@
+use crate::errors::GumError;
 use crate::state::{Post, Profile, Reaction, ReactionType, User};
+
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
 use std::str::FromStr;
 
 use crate::constants::*;
-use crate::errors::GumError;
 use crate::events::{ReactionDeleted, ReactionNew};
-use gpl_session::gpl_session::Session;
+use gpl_session::gpl_session::{session_auth_or, Session};
 use gpl_session::{Session, SessionError, SessionToken};
 
 // Create a reaction to a post from a profile
@@ -68,22 +69,11 @@ pub struct CreateReaction<'info> {
 }
 
 // Handler to create a new Reaction account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
-    let session_token = ctx.accounts.session_token.clone();
-    if let Some(token) = session_token {
-        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
-        require_eq!(
-            ctx.accounts.user.authority,
-            token.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    } else {
-        require_eq!(
-            ctx.accounts.user.authority,
-            ctx.accounts.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    }
     let reaction = &mut ctx.accounts.reaction;
     reaction.reaction_type = ReactionType::from_str(&reaction_type).unwrap();
     reaction.to_post = *ctx.accounts.to_post.to_account_info().key;
@@ -162,22 +152,11 @@ pub struct DeleteReaction<'info> {
 }
 
 // Handler to delete a Reaction account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn delete_reaction_handler(ctx: Context<DeleteReaction>) -> Result<()> {
-    let session_token = ctx.accounts.session_token.clone();
-    if let Some(token) = session_token {
-        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
-        require_eq!(
-            ctx.accounts.user.authority,
-            token.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    } else {
-        require_eq!(
-            ctx.accounts.user.authority,
-            ctx.accounts.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    }
     // emit a reaction deleted event
     emit!(ReactionDeleted {
         reaction: *ctx.accounts.reaction.to_account_info().key,

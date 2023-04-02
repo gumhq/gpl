@@ -1,10 +1,8 @@
 use crate::errors::GumError;
 use crate::state::{Connection, Profile, User};
-
 use anchor_lang::prelude::*;
-use gpl_session::gpl_session::Session;
-use gpl_session::Session;
-use gpl_session::{SessionError, SessionToken};
+use gpl_session::gpl_session::{session_auth_or, Session};
+use gpl_session::{Session, SessionError, SessionToken};
 use std::convert::AsRef;
 
 use crate::constants::*;
@@ -68,22 +66,11 @@ pub struct CreateConnection<'info> {
 }
 
 // Handler to create a new Connection account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn create_connection_handler(ctx: Context<CreateConnection>) -> Result<()> {
-    let session_token = ctx.accounts.session_token.clone();
-    if let Some(token) = session_token {
-        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
-        require_eq!(
-            ctx.accounts.user.authority,
-            token.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    } else {
-        require_eq!(
-            ctx.accounts.user.authority,
-            ctx.accounts.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    }
     // CHECK that the from_profile and to_profile are not the same
     require_neq!(
         ctx.accounts.from_profile.key(),
@@ -168,22 +155,11 @@ pub struct DeleteConnection<'info> {
 }
 
 // Handler to delete a Connection account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn delete_connection_handler(ctx: Context<DeleteConnection>) -> Result<()> {
-    let session_token = ctx.accounts.session_token.clone();
-    if let Some(token) = session_token {
-        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
-        require_eq!(
-            ctx.accounts.user.authority,
-            token.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    } else {
-        require_eq!(
-            ctx.accounts.user.authority,
-            ctx.accounts.authority.key(),
-            GumError::UnauthorizedSigner
-        );
-    }
     // emit a delete connection event
     emit!(ConnectionDeleted {
         connection: *ctx.accounts.connection.to_account_info().key,
