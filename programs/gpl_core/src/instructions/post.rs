@@ -1,16 +1,18 @@
-use crate::errors::PostError;
+use crate::errors::{GumError, PostError};
 use crate::events::{PostCommentNew, PostDeleted, PostNew, PostUpdated};
 use crate::state::{Post, Profile, User, MAX_LEN_URI};
+use gpl_session::gpl_session::Session;
+use gpl_session::Session;
 
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
 
 use crate::constants::*;
 
-use gpl_session::{SessionToken, ValidityChecker};
+use gpl_session::{SessionError, SessionToken};
 
 // Create Post
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 #[instruction(metadata_uri: String, random_hash: [u8;32])]
 pub struct CreatePost<'info> {
     // The account that will be initialized as a Post
@@ -41,18 +43,12 @@ pub struct CreatePost<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        // Better implemented as a function
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
 
-    #[account(
-        constraint = session_token.validate(ValidityChecker {
-            session_token: session_token.clone(),
-            authority: user.authority.key(),
-            target_program: crate::id(),
-            session_signer: authority.key(),
-        })?,
+    #[session(
+        signer = authority.key(),
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -68,6 +64,23 @@ pub fn create_post_handler(
     metadata_uri: String,
     random_hash: [u8; 32],
 ) -> Result<()> {
+    // TODO: Extract into macro
+    let session_token = ctx.accounts.session_token.clone();
+    if let Some(token) = session_token {
+        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
+        require_eq!(
+            ctx.accounts.user.authority,
+            token.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    } else {
+        require_eq!(
+            ctx.accounts.user.authority,
+            ctx.accounts.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    }
+
     // CHECK metadata_uri length
     require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
 
@@ -88,7 +101,7 @@ pub fn create_post_handler(
 }
 
 // Update a post account
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 #[instruction(metadata_uri: String)]
 pub struct UpdatePost<'info> {
     // The Post account to update
@@ -118,17 +131,11 @@ pub struct UpdatePost<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        // Better implemented as a function
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
-    #[account(
-        constraint = session_token.validate(ValidityChecker {
-            session_token: session_token.clone(),
-            authority: user.authority.key(),
-            target_program: crate::id(),
-            session_signer: authority.key(),
-        })?,
+    #[session(
+        signer = authority.key(),
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -138,6 +145,21 @@ pub struct UpdatePost<'info> {
 
 // Handler to update a Post account
 pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String) -> Result<()> {
+    let session_token = ctx.accounts.session_token.clone();
+    if let Some(token) = session_token {
+        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
+        require_eq!(
+            ctx.accounts.user.authority,
+            token.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    } else {
+        require_eq!(
+            ctx.accounts.user.authority,
+            ctx.accounts.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    }
     // CHECK metadata_uri length
     require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
     let post = &mut ctx.accounts.post;
@@ -154,7 +176,7 @@ pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String) -> Re
 }
 
 // Create a comment as a new post account with reply_to set to the parent post
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 #[instruction(metadata_uri: String, random_hash: [u8;32])]
 pub struct CreateComment<'info> {
     // The account that will be initialized as a Post
@@ -185,8 +207,6 @@ pub struct CreateComment<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        // Better implemented as a function
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
     #[account(
@@ -197,13 +217,9 @@ pub struct CreateComment<'info> {
         bump,
     )]
     pub reply_to: Account<'info, Post>,
-    #[account(
-        constraint = session_token.validate(ValidityChecker {
-            session_token: session_token.clone(),
-            authority: user.authority.key(),
-            target_program: crate::id(),
-            session_signer: authority.key(),
-        })?,
+    #[session(
+        signer = authority.key(),
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -218,6 +234,21 @@ pub fn create_comment_handler(
     metadata_uri: String,
     random_hash: [u8; 32],
 ) -> Result<()> {
+    let session_token = ctx.accounts.session_token.clone();
+    if let Some(token) = session_token {
+        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
+        require_eq!(
+            ctx.accounts.user.authority,
+            token.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    } else {
+        require_eq!(
+            ctx.accounts.user.authority,
+            ctx.accounts.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    }
     // Check metadata_uri length
     require!(metadata_uri.len() <= MAX_LEN_URI, PostError::URITooLong);
 
@@ -240,7 +271,7 @@ pub fn create_comment_handler(
 }
 
 // Delete a post account
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 pub struct DeletePost<'info> {
     // The Post account to delete
     #[account(
@@ -270,17 +301,12 @@ pub struct DeletePost<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        // Better implemented as a function
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
-    #[account(
-        constraint = session_token.validate(ValidityChecker {
-            session_token: session_token.clone(),
-            authority: user.authority.key(),
-            target_program: crate::id(),
-            session_signer: authority.key(),
-        })?,
+
+    #[session(
+        signer = authority.key(),
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -292,6 +318,21 @@ pub struct DeletePost<'info> {
 
 // Handler to delete a Post account
 pub fn delete_post_handler(ctx: Context<DeletePost>) -> Result<()> {
+    let session_token = ctx.accounts.session_token.clone();
+    if let Some(token) = session_token {
+        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
+        require_eq!(
+            ctx.accounts.user.authority,
+            token.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    } else {
+        require_eq!(
+            ctx.accounts.user.authority,
+            ctx.accounts.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    }
     // emit delete post event
     emit!(PostDeleted {
         post: *ctx.accounts.post.to_account_info().key,

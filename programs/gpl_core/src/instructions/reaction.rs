@@ -4,11 +4,13 @@ use std::convert::AsRef;
 use std::str::FromStr;
 
 use crate::constants::*;
+use crate::errors::GumError;
 use crate::events::{ReactionDeleted, ReactionNew};
-use gpl_session::{SessionToken, ValidityChecker};
+use gpl_session::gpl_session::Session;
+use gpl_session::{Session, SessionError, SessionToken};
 
 // Create a reaction to a post from a profile
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 #[instruction(reaction_type: String)]
 pub struct CreateReaction<'info> {
     // The account that will be initialized as a Reaction
@@ -49,18 +51,12 @@ pub struct CreateReaction<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        // Better implemented as a function
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
 
-    #[account(
-        constraint = session_token.validate(ValidityChecker {
-            session_token: session_token.clone(),
-            authority: user.authority.key(),
-            target_program: crate::id(),
-            session_signer: authority.key(),
-        })?,
+    #[session(
+        signer = authority.key(),
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -73,6 +69,21 @@ pub struct CreateReaction<'info> {
 
 // Handler to create a new Reaction account
 pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
+    let session_token = ctx.accounts.session_token.clone();
+    if let Some(token) = session_token {
+        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
+        require_eq!(
+            ctx.accounts.user.authority,
+            token.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    } else {
+        require_eq!(
+            ctx.accounts.user.authority,
+            ctx.accounts.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    }
     let reaction = &mut ctx.accounts.reaction;
     reaction.reaction_type = ReactionType::from_str(&reaction_type).unwrap();
     reaction.to_post = *ctx.accounts.to_post.to_account_info().key;
@@ -92,7 +103,7 @@ pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: Stri
 }
 
 // Delete a reaction account
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 pub struct DeleteReaction<'info> {
     #[account(
         mut,
@@ -132,18 +143,12 @@ pub struct DeleteReaction<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        // Better implemented as a function
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
 
-    #[account(
-        constraint = session_token.validate(ValidityChecker {
-            session_token: session_token.clone(),
-            authority: user.authority.key(),
-            target_program: crate::id(),
-            session_signer: authority.key(),
-        })?,
+    #[session(
+        signer = authority.key(),
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -158,6 +163,21 @@ pub struct DeleteReaction<'info> {
 
 // Handler to delete a Reaction account
 pub fn delete_reaction_handler(ctx: Context<DeleteReaction>) -> Result<()> {
+    let session_token = ctx.accounts.session_token.clone();
+    if let Some(token) = session_token {
+        require!(ctx.accounts.is_valid()?, SessionError::InvalidToken);
+        require_eq!(
+            ctx.accounts.user.authority,
+            token.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    } else {
+        require_eq!(
+            ctx.accounts.user.authority,
+            ctx.accounts.authority.key(),
+            GumError::UnauthorizedSigner
+        );
+    }
     // emit a reaction deleted event
     emit!(ReactionDeleted {
         reaction: *ctx.accounts.reaction.to_account_info().key,

@@ -584,6 +584,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "gpl-session-macros"
+version = "0.1.0"
+dependencies = [
+ "gpl-session-macros-attribute",
+]
+
+[[package]]
+name = "gpl-session-macros-attribute"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "gpl_compression"
 version = "0.1.1"
 dependencies = [
@@ -616,6 +632,7 @@ name = "gpl_session"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "gpl-session-macros",
  "solana-security-txt",
 ]
 

@@ -16,6 +16,7 @@ solana_security_txt::security_txt! {
 #[program]
 pub mod gpl_session {
     use super::*;
+    pub use gpl_session_macros::*;
 
     // create a session token
     pub fn create_session(
@@ -185,6 +186,25 @@ impl SessionToken {
 
         // Check if the token has expired
         self.is_expired()
+    }
+}
+
+pub trait Session<'info> {
+    fn session_token(&self) -> Account<'info, SessionToken>;
+    fn session_signer(&self) -> Pubkey;
+    fn authority(&self) -> Pubkey;
+    fn target_program(&self) -> Pubkey;
+
+    fn is_valid(&self) -> Result<bool> {
+        let session_token = self.session_token();
+        let validity_ctx = ValidityChecker {
+            session_token: self.session_token(),
+            session_signer: self.session_signer(),
+            authority: self.authority(),
+            target_program: self.target_program(),
+        };
+        // Check if the token is valid
+        session_token.validate(validity_ctx)
     }
 }
 
