@@ -56,7 +56,7 @@ pub struct CreateReaction<'info> {
     pub user: Account<'info, User>,
 
     #[session(
-        signer = authority.key(),
+        signer = authority,
         authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
@@ -137,7 +137,7 @@ pub struct DeleteReaction<'info> {
     pub user: Account<'info, User>,
 
     #[session(
-        signer = authority.key(),
+        signer = authority,
         authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,

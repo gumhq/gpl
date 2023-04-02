@@ -47,7 +47,7 @@ pub struct CreatePost<'info> {
     pub user: Account<'info, User>,
 
     #[session(
-        signer = authority.key(),
+        signer = authority,
         authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
@@ -121,7 +121,7 @@ pub struct UpdatePost<'info> {
     )]
     pub user: Account<'info, User>,
     #[session(
-        signer = authority.key(),
+        signer = authority,
         authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
@@ -194,7 +194,7 @@ pub struct CreateComment<'info> {
     )]
     pub reply_to: Account<'info, Post>,
     #[session(
-        signer = authority.key(),
+        signer = authority,
         authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
@@ -270,7 +270,7 @@ pub struct DeletePost<'info> {
     pub user: Account<'info, User>,
 
     #[session(
-        signer = authority.key(),
+        signer = authority,
         authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,

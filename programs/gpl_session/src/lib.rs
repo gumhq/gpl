@@ -142,7 +142,7 @@ pub fn revoke_session_token_handler(_: Context<RevokeSessionToken>) -> Result<()
 
 pub struct ValidityChecker<'info> {
     pub session_token: Account<'info, SessionToken>,
-    pub session_signer: Pubkey,
+    pub session_signer: Signer<'info>,
     pub authority: Pubkey,
     pub target_program: Pubkey,
 }
@@ -169,7 +169,7 @@ impl SessionToken {
     // validate the token
     pub fn validate(&self, ctx: ValidityChecker) -> Result<bool> {
         let target_program = ctx.target_program;
-        let session_signer = ctx.session_signer;
+        let session_signer = ctx.session_signer.key();
         let authority = ctx.authority.key();
 
         // Check the PDA seeds
@@ -191,8 +191,8 @@ impl SessionToken {
 
 pub trait Session<'info> {
     fn session_token(&self) -> Option<Account<'info, SessionToken>>;
-    fn session_signer(&self) -> Pubkey;
-    fn authority(&self) -> Pubkey;
+    fn session_signer(&self) -> Signer<'info>;
+    fn session_authority(&self) -> Pubkey;
     fn target_program(&self) -> Pubkey;
 
     fn is_valid(&self) -> Result<bool> {
@@ -200,7 +200,7 @@ pub trait Session<'info> {
         let validity_ctx = ValidityChecker {
             session_token: session_token.clone(),
             session_signer: self.session_signer(),
-            authority: self.authority(),
+            authority: self.session_authority(),
             target_program: self.target_program(),
         };
         // Check if the token is valid

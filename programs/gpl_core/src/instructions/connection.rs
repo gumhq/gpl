@@ -54,7 +54,7 @@ pub struct CreateConnection<'info> {
     pub user: Account<'info, User>,
 
     #[session(
-        signer = authority.key(),
+        signer = authority,
         authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
@@ -139,7 +139,7 @@ pub struct DeleteConnection<'info> {
     pub user: Account<'info, User>,
 
     #[session(
-        signer = authority.key(),
+        signer = authority,
         authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
