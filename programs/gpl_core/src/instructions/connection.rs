@@ -1,7 +1,7 @@
+use crate::errors::GumError;
 use crate::state::{Connection, Profile, User};
 use anchor_lang::prelude::*;
-use gpl_session::program::GplSession;
-use gpl_session::SessionToken;
+use gpl_session::{session_auth_or, Session, SessionError, SessionToken};
 use std::convert::AsRef;
 
 use crate::constants::*;
@@ -9,7 +9,7 @@ use crate::errors::ConnectionError;
 use crate::events::{ConnectionDeleted, ConnectionNew};
 
 // Create a connection between two profiles, ie from_profile -> to_profile
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 pub struct CreateConnection<'info> {
     // The account that will be initialized as a Connection
     #[account(
@@ -49,23 +49,12 @@ pub struct CreateConnection<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        // Better implemented as a function
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
 
-    #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+    #[session(
+        signer = authority,
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -76,6 +65,10 @@ pub struct CreateConnection<'info> {
 }
 
 // Handler to create a new Connection account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn create_connection_handler(ctx: Context<CreateConnection>) -> Result<()> {
     // CHECK that the from_profile and to_profile are not the same
     require_neq!(
@@ -100,7 +93,7 @@ pub fn create_connection_handler(ctx: Context<CreateConnection>) -> Result<()> {
 }
 
 // Delete a connection between two profiles, ie from_profile -> to_profile
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 pub struct DeleteConnection<'info> {
     // The Connection account to delete
     #[account(
@@ -141,21 +134,12 @@ pub struct DeleteConnection<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
-    #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+
+    #[session(
+        signer = authority,
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -170,6 +154,10 @@ pub struct DeleteConnection<'info> {
 }
 
 // Handler to delete a Connection account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn delete_connection_handler(ctx: Context<DeleteConnection>) -> Result<()> {
     // emit a delete connection event
     emit!(ConnectionDeleted {

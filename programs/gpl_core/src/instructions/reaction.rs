@@ -1,15 +1,16 @@
+use crate::errors::GumError;
 use crate::state::{Post, Profile, Reaction, ReactionType, User};
+
 use anchor_lang::prelude::*;
-use gpl_session::program::GplSession;
-use gpl_session::SessionToken;
 use std::convert::AsRef;
 use std::str::FromStr;
 
 use crate::constants::*;
 use crate::events::{ReactionDeleted, ReactionNew};
+use gpl_session::{session_auth_or, Session, SessionError, SessionToken};
 
 // Create a reaction to a post from a profile
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 #[instruction(reaction_type: String)]
 pub struct CreateReaction<'info> {
     // The account that will be initialized as a Reaction
@@ -50,23 +51,12 @@ pub struct CreateReaction<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        // Better implemented as a function
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
 
-    #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+    #[session(
+        signer = authority,
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -78,6 +68,10 @@ pub struct CreateReaction<'info> {
 }
 
 // Handler to create a new Reaction account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
     let reaction = &mut ctx.accounts.reaction;
     reaction.reaction_type = ReactionType::from_str(&reaction_type).unwrap();
@@ -98,7 +92,7 @@ pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: Stri
 }
 
 // Delete a reaction account
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 pub struct DeleteReaction<'info> {
     #[account(
         mut,
@@ -138,23 +132,12 @@ pub struct DeleteReaction<'info> {
             user.random_hash.as_ref(),
         ],
         bump,
-        // Better implemented as a function
-        constraint = (user.authority == authority.key() || user.authority == session_token.as_ref().unwrap().authority.key()),
     )]
     pub user: Account<'info, User>,
 
-    #[account(
-        seeds = [
-            SessionToken::SEED_PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            // Session Signer
-            authority.key().as_ref(),
-            // User Authority
-            user.authority.as_ref(),
-        ],
-        seeds::program = GplSession::id(),
-        bump,
-        constraint = session_token.is_valid()?
+    #[session(
+        signer = authority,
+        authority = user.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -168,6 +151,10 @@ pub struct DeleteReaction<'info> {
 }
 
 // Handler to delete a Reaction account
+#[session_auth_or(
+    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn delete_reaction_handler(ctx: Context<DeleteReaction>) -> Result<()> {
     // emit a reaction deleted event
     emit!(ReactionDeleted {

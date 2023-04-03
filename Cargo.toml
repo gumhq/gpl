@@ -1,6 +1,8 @@
 [workspace]
 members = [
-    "programs/*"
+    "programs/*",
+    "programs/gpl_session/macros",
+    "programs/gpl_session/macros/attribute",
 ]
 
 [profile.release]
