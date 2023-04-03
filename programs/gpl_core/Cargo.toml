@@ -1,8 +1,11 @@
 [package]
 name = "gpl-core"
 version = "1.0.0"
-description = "Gum Protocol Core"
+description = "Gum Protocol Core (GPL Core)"
 edition = "2021"
+authors = ["Gum Core Dev <hello@gum.fun>"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/gumhq/gpl"
 
 [lib]
 crate-type = ["cdylib", "lib"]
