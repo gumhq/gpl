@@ -1,8 +1,7 @@
 use crate::errors::GumError;
 use crate::state::{Connection, Profile, User};
 use anchor_lang::prelude::*;
-use gpl_session::gpl_session::{session_auth_or, Session};
-use gpl_session::{Session, SessionError, SessionToken};
+use gpl_session::{session_auth_or, Session, SessionError, SessionToken};
 use std::convert::AsRef;
 
 use crate::constants::*;

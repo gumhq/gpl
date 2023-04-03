@@ -1,6 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_lang::system_program;
+
+#[cfg(feature = "no-entrypoint")]
+pub use gpl_session_macros::*;
+
 declare_id!("3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE");
 
 #[cfg(not(feature = "no-entrypoint"))]
@@ -16,7 +20,6 @@ solana_security_txt::security_txt! {
 #[program]
 pub mod gpl_session {
     use super::*;
-    pub use gpl_session_macros::*;
 
     // create a session token
     pub fn create_session(

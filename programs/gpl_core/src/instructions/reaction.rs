@@ -7,8 +7,7 @@ use std::str::FromStr;
 
 use crate::constants::*;
 use crate::events::{ReactionDeleted, ReactionNew};
-use gpl_session::gpl_session::{session_auth_or, Session};
-use gpl_session::{Session, SessionError, SessionToken};
+use gpl_session::{session_auth_or, Session, SessionError, SessionToken};
 
 // Create a reaction to a post from a profile
 #[derive(Accounts, Session)]

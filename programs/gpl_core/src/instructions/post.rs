@@ -1,8 +1,7 @@
 use crate::errors::{GumError, PostError};
 use crate::events::{PostCommentNew, PostDeleted, PostNew, PostUpdated};
 use crate::state::{Post, Profile, User, MAX_LEN_URI};
-use gpl_session::gpl_session::{session_auth_or, Session};
-use gpl_session::Session;
+use gpl_session::{session_auth_or, Session};
 
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
