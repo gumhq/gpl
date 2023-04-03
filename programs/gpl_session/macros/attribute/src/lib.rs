@@ -102,7 +102,6 @@ pub fn derive(input: TokenStream) -> TokenStream {
     output.into()
 }
 
-#[derive(Debug)]
 struct SessionAuthArgs(syn::Expr, syn::Expr);
 
 impl Parse for SessionAuthArgs {
