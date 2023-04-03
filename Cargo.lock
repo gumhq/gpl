@@ -584,6 +584,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "gpl-compression"
+version = "0.1.1"
+dependencies = [
+ "anchor-lang",
+ "gpl-core",
+ "solana-security-txt",
+ "spl-account-compression",
+]
+
+[[package]]
+name = "gpl-core"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "gpl-session",
+ "solana-security-txt",
+ "strum",
+ "strum_macros",
+]
+
+[[package]]
+name = "gpl-nameservice"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+]
+
+[[package]]
+name = "gpl-session"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "gpl-session-macros",
+ "solana-security-txt",
+]
+
+[[package]]
 name = "gpl-session-macros"
 version = "0.1.0"
 dependencies = [
@@ -597,43 +634,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "gpl_compression"
-version = "0.1.1"
-dependencies = [
- "anchor-lang",
- "gpl_core",
- "solana-security-txt",
- "spl-account-compression",
-]
-
-[[package]]
-name = "gpl_core"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "gpl_session",
- "solana-security-txt",
- "strum",
- "strum_macros",
-]
-
-[[package]]
-name = "gpl_nameservice"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
-]
-
-[[package]]
-name = "gpl_session"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "gpl-session-macros",
- "solana-security-txt",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 [package]
-name = "gpl_session"
+name = "gpl-session"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
@@ -9,7 +9,7 @@ crate-type = ["cdylib", "lib"]
 name = "gpl_session"
 
 [features]
-no-entrypoint = []
+no-entrypoint = ["gpl-session-macros"]
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
@@ -17,5 +17,5 @@ default = []
 
 [dependencies]
 anchor-lang = "0.26.0"
-gpl-session-macros = { version = "0.1.0", path = "macros" }
 solana-security-txt = "1.1.0"
+gpl-session-macros = { version = "0.1.0", path = "macros", optional = true }
