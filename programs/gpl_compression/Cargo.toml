@@ -17,6 +17,6 @@ default = []
 
 [dependencies]
 anchor-lang = "0.26.0"
-gpl-core = { version = "0.1.0", path = "../gpl_core", features = ["cpi"] }
+gpl-core = { version = "1.0.0", path = "../gpl_core", features = ["cpi"] }
 solana-security-txt = "1.1.0"
 spl-account-compression = {version = "0.1.7", features = ["cpi"]}
