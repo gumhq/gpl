@@ -17,7 +17,7 @@ default = []
 
 [dependencies]
 anchor-lang = { version = "0.26.0" }
-gpl-session = { version = "0.1.0", path = "../gpl_session", features = ["no-entrypoint"] }
+gpl-session = { version = "0.2.0", path = "../gpl_session", features = ["no-entrypoint"] }
 solana-security-txt = "1.1.0"
 strum = "0.24.1"
 strum_macros = "0.24.3"
