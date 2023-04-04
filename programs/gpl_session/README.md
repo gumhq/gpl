@@ -27,13 +27,16 @@ pub struct Instruction<'info> {
     pub user: Account<'info, User>,
 
     #[session(
-        signer = authority,
+        // The ephemeral keypair signing the transaction
+        signer = signer,
+        // The authority of the user account which must have created the session
         authority = user.authority.key()
     )]
+    // Session Tokens are passed as optional accounts
     pub session_token: Option<Account<'info, SessionToken>>,
 
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub signer: Signer<'info>,
     .....
 }
 ```
