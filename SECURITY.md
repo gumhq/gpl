@@ -2,7 +2,7 @@
 
 This document outlines our security policy and guidelines on disclosing vulnerabilities. We use github Security Advisory to manage the process, so please ensure you've 2FA enabled on your github account before disclosing any vulnerability.
 
-1. Create a security advisory on github
+1. Create a [security advisory on github](https://github.com/gumhq/gpl/security/advisories/new)
 2. Include a demonstration or a POC along with detailed bug report.
 3. A member from our security team will look into it with in 48 hours. If you haven't received any acknowledgement please send an email to `hello@gum.fun` and escalate it.
 
