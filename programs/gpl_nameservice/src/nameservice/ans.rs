@@ -13,7 +13,6 @@ pub struct ANSNameRecord {
     // If `Pubkey::default()` the data is unspecified.
     pub class: Pubkey,
 
-    //TODO: Check with ANS team for the right type here.
     pub expires_at: u64,
 }
 
@@ -58,12 +57,12 @@ impl NameServiceParser for ANSNameService {
         // Validate the owner
         Self::validate_owner(record)?;
 
-        // data size may be longer than the fixed ans record name.
+        // Data size may be longer than the fixed ans record name.
         if ANSNameRecord::LEN >= record.data_len() {
             return Err(NameServiceError::InvalidDataLength.into());
         }
 
-        // check if the owner of the account is ANS program.
+        // Check if the owner of the account is ANS program.
         if record.owner.to_string() != Self::id_str() {
             return Err(ProgramError::InvalidAccountData.into());
         }
