@@ -1,6 +1,6 @@
 use crate::errors::PostError;
 use crate::events::{PostCommentNew, PostDeleted, PostNew, PostUpdated};
-use crate::state::{Post, Profile, User, MAX_LEN_URI};
+use crate::state::{Post, Profile, MAX_LEN_URI};
 
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
@@ -26,22 +26,12 @@ pub struct CreatePost<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        bump,
-        has_one = user,
-    )]
-    pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub profile: Account<'info, Profile>,
     #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
@@ -65,7 +55,6 @@ pub fn create_post_handler(
     emit!(PostNew {
         post: *post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,
@@ -91,22 +80,12 @@ pub struct UpdatePost<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        bump,
-        has_one = user,
-    )]
-    pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub profile: Account<'info, Profile>,
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -122,7 +101,6 @@ pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String) -> Re
     emit!(PostUpdated {
         post: *post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         metadata_uri: post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,
     });
@@ -148,22 +126,12 @@ pub struct CreateComment<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        bump,
-        has_one = user,
-    )]
-    pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub profile: Account<'info, Profile>,
     #[account(
         seeds = [
             POST_PREFIX_SEED.as_bytes(),
@@ -196,7 +164,6 @@ pub fn create_comment_handler(
     emit!(PostCommentNew {
         post: *post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
         reply_to: *ctx.accounts.reply_to.to_account_info().key,
@@ -223,22 +190,12 @@ pub struct DeletePost<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        bump,
-        has_one = user,
-    )]
-    pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub profile: Account<'info, Profile>,
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -250,7 +207,6 @@ pub fn delete_post_handler(ctx: Context<DeletePost>) -> Result<()> {
     emit!(PostDeleted {
         post: *ctx.accounts.post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
     });
     Ok(())

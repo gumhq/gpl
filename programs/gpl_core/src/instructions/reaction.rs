@@ -1,4 +1,4 @@
-use crate::state::{Post, Profile, Reaction, ReactionType, User};
+use crate::state::{Post, Profile, Reaction, ReactionType};
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
 use std::str::FromStr;
@@ -23,33 +23,16 @@ pub struct CreateReaction<'info> {
         space = Reaction::LEN
     )]
     pub reaction: Account<'info, Reaction>,
-    #[account(
-        seeds = [
-            POST_PREFIX_SEED.as_bytes(),
-            to_post.random_hash.as_ref(),
-        ],
-        bump,
-    )]
     pub to_post: Account<'info, Post>,
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        bump,
-        has_one = user,
-    )]
-    pub from_profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub from_profile: Account<'info, Profile>,
     #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
@@ -67,7 +50,6 @@ pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: Stri
     emit!(ReactionNew {
         reaction: *reaction.to_account_info().key,
         reaction_type: reaction.reaction_type,
-        user: *ctx.accounts.user.to_account_info().key,
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
@@ -93,33 +75,16 @@ pub struct DeleteReaction<'info> {
         close = authority,
     )]
     pub reaction: Account<'info, Reaction>,
-    #[account(
-        seeds = [
-            POST_PREFIX_SEED.as_bytes(),
-            to_post.random_hash.as_ref(),
-        ],
-        bump,
-    )]
     pub to_post: Account<'info, Post>,
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        bump,
-        has_one = user,
-    )]
-    pub from_profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub from_profile: Account<'info, Profile>,
     #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
@@ -132,7 +97,6 @@ pub fn delete_reaction_handler(ctx: Context<DeleteReaction>) -> Result<()> {
     emit!(ReactionDeleted {
         reaction: *ctx.accounts.reaction.to_account_info().key,
         reaction_type: ctx.accounts.reaction.reaction_type,
-        user: *ctx.accounts.user.to_account_info().key,
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,

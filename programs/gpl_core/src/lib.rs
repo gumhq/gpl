@@ -26,28 +26,13 @@ pub mod gpl_core {
 
     use super::*;
 
-    // Create a new user account
-    pub fn create_user(ctx: Context<CreateUser>, random_hash: [u8; 32]) -> Result<()> {
-        create_user_handler(ctx, random_hash)
-    }
-
-    // Update a user account with new authority
-    pub fn update_user(ctx: Context<UpdateUser>) -> Result<()> {
-        update_user_handler(ctx)
-    }
-
-    // Delete a user account
-    pub fn delete_user(ctx: Context<DeleteUser>) -> Result<()> {
-        delete_user_handler(ctx)
-    }
-
     // Create a new profile account
     pub fn create_profile(
         ctx: Context<CreateProfile>,
-        namespace: String,
+        random_hash: [u8; 32],
         metadata_uri: String,
     ) -> Result<()> {
-        create_profile_handler(ctx, namespace, metadata_uri)
+        create_profile_handler(ctx, random_hash, metadata_uri)
     }
 
     // update a profile account
@@ -58,30 +43,6 @@ pub mod gpl_core {
     // Delete a profile account
     pub fn delete_profile(ctx: Context<DeleteProfile>) -> Result<()> {
         delete_profile_handler(ctx)
-    }
-
-    // create a new profile_metadata account
-    /// DEPRECATED
-    pub fn create_profile_metadata(
-        ctx: Context<CreateProfileMetadata>,
-        metadata_uri: String,
-    ) -> Result<()> {
-        create_profile_metadata_handler(ctx, metadata_uri)
-    }
-
-    // update a profile_metadata
-    /// DEPRECATED
-    pub fn update_profile_metadata(
-        ctx: Context<UpdateProfileMetadata>,
-        metadata_uri: String,
-    ) -> Result<()> {
-        update_profile_metadata_handler(ctx, metadata_uri)
-    }
-
-    // delete a profile_metadata
-    /// DEPRECATED
-    pub fn delete_profile_metadata(ctx: Context<DeleteProfileMetadata>) -> Result<()> {
-        delete_profile_metadata_handler(ctx)
     }
 
     // create a new post account

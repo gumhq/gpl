@@ -15,7 +15,7 @@ impl Reaction {
     pub const LEN: usize = 8 + std::mem::size_of::<Self>();
 }
 
-// Probably better to use emoji codes instead of strings
+// TODO: Probably better to use emoji codes instead of strings
 #[derive(
     AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, AsRefStr, EnumString,
 )]
@@ -34,5 +34,4 @@ pub enum ReactionType {
     Sad,
     #[strum(ascii_case_insensitive)]
     Angry,
-    CustomReaction([u8; 32]),
 }

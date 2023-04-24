@@ -1,6 +1,5 @@
 use crate::constants::*;
 use crate::errors::GumError;
-use crate::state::User;
 use crate::state::MAX_LEN_URI;
 use crate::state::{Badge, Issuer, Profile, Schema};
 
@@ -29,8 +28,7 @@ pub struct CreateBadge<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            holder.namespace.as_ref().as_bytes(),
-            holder.user.key().as_ref()
+            holder.random_hash.as_ref(),
         ],
         bump,
     )]
@@ -117,22 +115,11 @@ pub struct BurnBadge<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            holder.namespace.as_ref().as_bytes(),
-            holder.user.key().as_ref()
+            holder.random_hash.as_ref(),
         ],
         bump,
-        has_one = user,
     )]
     pub holder: Account<'info, Profile>,
-
-    #[account(
-        seeds = [
-          USER_PREFIX_SEED.as_bytes(),
-          user.random_hash.as_ref(),
-        ],
-        bump,
-    )]
-    pub user: Account<'info, User>,
 
     #[account(
         seeds = [Issuer::SEED_PREFIX.as_bytes(), issuer.key().as_ref()],
@@ -141,7 +128,7 @@ pub struct BurnBadge<'info> {
     pub issuer: Account<'info, Issuer>,
     #[account(
         mut,
-        constraint = signer.key() == user.key() || signer.key() == issuer.key() @ProgramError::MissingRequiredSignature
+        constraint = signer.key() == holder.authority.key() || signer.key() == issuer.key() @ProgramError::MissingRequiredSignature
     )]
     pub signer: Signer<'info>,
 }
