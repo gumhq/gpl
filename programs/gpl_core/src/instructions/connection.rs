@@ -111,7 +111,7 @@ pub struct DeleteConnection<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(mut, constraint = refund_receiver.key() == user.authority)]
+    #[account(mut, constraint = refund_receiver.key() == from_profile.authority)]
     pub refund_receiver: SystemAccount<'info>,
 
     // The system program
