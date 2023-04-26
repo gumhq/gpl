@@ -2,7 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import randombytes from "randombytes";
 import { expect } from "chai";
 import { GplCore } from "../../target/types/gpl_core";
-import { new_session, airdrop } from "../utils";
+import { new_session, airdrop, createGumTld, createGumDomain } from "../utils";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 
@@ -19,17 +19,15 @@ describe("Comment", async () => {
   let fromProfilePDA: anchor.web3.PublicKey;
 
   before(async () => {
-    // Create a user
     const randomHash = randombytes(32);
-    const userTx = program.methods.createUser(randomHash);
-    const userPubKeys = await userTx.pubkeys();
-    userPDA = userPubKeys.user as anchor.web3.PublicKey;
-    await userTx.rpc();
+    const gumTld = await createGumTld();
 
     // Create a profile
+    const profileMetdataUri = "https://example.com";
+    const screenName = await createGumDomain(gumTld, "foobarq3eqw");
     const profileTx = program.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();
@@ -39,7 +37,7 @@ describe("Comment", async () => {
     const metadataUri = "This is a test post";
     const post = program.methods
       .createPost(metadataUri, postRandomHash)
-      .accounts({ user: userPDA, profile: profilePDA, sessionToken: null });
+      .accounts({ profile: profilePDA, sessionToken: null });
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;
     await post.rpc();
@@ -50,17 +48,19 @@ describe("Comment", async () => {
 
     // Create a test user pda
     const testUserRandomhash = randombytes(32);
-    const testUserTx = program.methods.createUser(testUserRandomhash).accounts({
-      authority: testUserKeypair.publicKey,
-    });
-    const testUserPubKeys = await testUserTx.pubkeys();
-    testUserPDA = testUserPubKeys.user as anchor.web3.PublicKey;
-    await testUserTx.signers([testUserKeypair]).rpc();
+    const testScreenName = await createGumDomain(
+      gumTld,
+      "goobarq3eqw",
+      testUserKeypair
+    );
 
     // Create a from profile
     const fromProfileTx = program.methods
-      .createProfile("Personal")
-      .accounts({ user: testUserPDA, authority: testUserKeypair.publicKey });
+      .createProfile(testUserRandomhash, profileMetdataUri)
+      .accounts({
+        authority: testUserKeypair.publicKey,
+        screenName: testScreenName,
+      });
     const fromProfilePubkeys = await fromProfileTx.pubkeys();
     fromProfilePDA = fromProfilePubkeys.profile as anchor.web3.PublicKey;
     await fromProfileTx.signers([testUserKeypair]).rpc();
@@ -74,7 +74,6 @@ describe("Comment", async () => {
       .accounts({
         replyTo: postPDA,
         profile: fromProfilePDA,
-        user: testUserPDA,
         authority: testUserKeypair.publicKey,
         sessionToken: null,
       });
@@ -111,7 +110,6 @@ describe("Comment", async () => {
         .accounts({
           replyTo: postPDA,
           profile: fromProfilePDA,
-          user: testUserPDA,
           authority: sessionKeypair.publicKey,
           sessionToken: sessionToken,
         });

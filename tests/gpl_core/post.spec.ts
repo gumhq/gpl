@@ -17,13 +17,12 @@ describe("Post", async () => {
   let postPDA: anchor.web3.PublicKey;
 
   before(async () => {
-    // Create a user
     const randomHash = randombytes(32);
     const gumTld = await createGumTld();
 
     // Create a profile
     const profileMetdataUri = "https://example.com";
-    const screenName = await createGumDomain(gumTld, "foobarq3eqw");
+    const screenName = await createGumDomain(gumTld, "sdfsdfdsfgsdgsd");
     const profileTx = program.methods
       .createProfile(randomHash, profileMetdataUri)
       .accounts({ screenName });
@@ -98,10 +97,19 @@ describe("Post", async () => {
       await airdrop(randomUser.publicKey);
 
       const randomHash = randombytes(32);
+      const gumTld = await createGumTld();
+
+      // Create a profile
+      const profileMetdataUri = "https://example.com";
+      const screenName = await createGumDomain(
+        gumTld,
+        "testscreename",
+        randomUser
+      );
       // Create a profile
       const testProfile = program.methods
-        .createProfile(randomHash, "metadata")
-        .accounts({ authority: randomUser.publicKey });
+        .createProfile(randomHash, profileMetdataUri)
+        .accounts({ authority: randomUser.publicKey, screenName });
       const testProfilePubKeys = await testProfile.pubkeys();
       randomProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
       const testProfileTx = await testProfile.transaction();

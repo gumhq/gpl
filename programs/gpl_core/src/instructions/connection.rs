@@ -30,7 +30,6 @@ pub struct CreateConnection<'info> {
             from_profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
     )]
     pub from_profile: Account<'info, Profile>,
 
@@ -97,7 +96,6 @@ pub struct DeleteConnection<'info> {
             from_profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
     )]
     pub from_profile: Account<'info, Profile>,
     pub to_profile: Account<'info, Profile>,
