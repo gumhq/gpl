@@ -1,0 +1,16 @@
+[package]
+name = "gpl-session-macros-attribute"
+version = "0.1.0"
+edition = "2021"
+authors = ["Gum Core Dev <hello@gum.fun>"]
+license = "GPL-3.0-or-later"
+description = "GPL Session attribute and derive macro for instruction access control"
+repository = "https://github.com/gumhq/gpl"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.32"
+quote = "1.0.10"
+syn = { version = "1.0.60", features = ["full"] }

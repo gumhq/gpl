@@ -43,7 +43,7 @@ describe("Profile", async () => {
     } catch (error: any) {
       expect(error).to.be.an("error");
       expect(error.toString()).to.contain(
-        `Account does not exist ${profilePDA.toString()}`
+        `Account does not exist or has no data ${profilePDA.toString()}`
       );
     }
   });

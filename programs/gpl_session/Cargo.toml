@@ -1,15 +1,18 @@
 [package]
-name = "gpl_session"
-version = "0.1.0"
-description = "Created with Anchor"
+name = "gpl-session"
+version = "0.2.0"
 edition = "2021"
+authors = ["Gum Core Dev <hello@gum.fun>"]
+license = "GPL-3.0-or-later"
+description = "Gum Session Protocol (GPL Session)"
+repository = "https://github.com/gumhq/gpl"
 
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "gpl_session"
 
 [features]
-no-entrypoint = []
+no-entrypoint = ["gpl-session-macros"]
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
@@ -17,3 +20,5 @@ default = []
 
 [dependencies]
 anchor-lang = "0.26.0"
+solana-security-txt = "1.1.0"
+gpl-session-macros = { version = "0.1.0", path = "macros", optional = true }

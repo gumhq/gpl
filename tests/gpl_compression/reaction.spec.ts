@@ -79,6 +79,7 @@ describe("Reaction Compression", async () => {
       .accounts({
         profile: profilePDA,
         authority: payer.publicKey,
+        sessionToken: null,
       });
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;

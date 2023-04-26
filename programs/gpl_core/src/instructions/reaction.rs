@@ -1,12 +1,16 @@
+use crate::errors::GumError;
 use crate::state::{Post, Profile, Reaction, ReactionType};
+
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
 use std::str::FromStr;
 
 use crate::constants::*;
 use crate::events::{ReactionDeleted, ReactionNew};
+use gpl_session::{session_auth_or, Session, SessionError, SessionToken};
+
 // Create a reaction to a post from a profile
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 #[instruction(reaction_type: String)]
 pub struct CreateReaction<'info> {
     // The account that will be initialized as a Reaction
@@ -30,16 +34,27 @@ pub struct CreateReaction<'info> {
             from_profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
     )]
     pub from_profile: Account<'info, Profile>,
+
+    #[session(
+        signer = authority,
+        authority = from_profile.authority.key()
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
+
     #[account(mut)]
     pub authority: Signer<'info>,
+
     // The system program
     pub system_program: Program<'info, System>,
 }
 
 // Handler to create a new Reaction account
+#[session_auth_or(
+    ctx.accounts.from_profile.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
     let reaction = &mut ctx.accounts.reaction;
     reaction.reaction_type = ReactionType::from_str(&reaction_type).unwrap();
@@ -59,7 +74,7 @@ pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: Stri
 }
 
 // Delete a reaction account
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 pub struct DeleteReaction<'info> {
     #[account(
         mut,
@@ -72,7 +87,7 @@ pub struct DeleteReaction<'info> {
         bump,
         has_one = to_post,
         has_one = from_profile,
-        close = authority,
+        close = refund_receiver,
     )]
     pub reaction: Account<'info, Reaction>,
     pub to_post: Account<'info, Post>,
@@ -82,16 +97,30 @@ pub struct DeleteReaction<'info> {
             from_profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = authority,
     )]
     pub from_profile: Account<'info, Profile>,
+
+    #[session(
+        signer = authority,
+        authority = from_profile.authority.key()
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
+
     #[account(mut)]
     pub authority: Signer<'info>,
+
+    #[account(mut, constraint = refund_receiver.key() == user.authority)]
+    pub refund_receiver: SystemAccount<'info>,
+
     // The system program
     pub system_program: Program<'info, System>,
 }
 
 // Handler to delete a Reaction account
+#[session_auth_or(
+    ctx.accounts.from_profile.authority.key() == ctx.accounts.authority.key(),
+    GumError::UnauthorizedSigner
+)]
 pub fn delete_reaction_handler(ctx: Context<DeleteReaction>) -> Result<()> {
     // emit a reaction deleted event
     emit!(ReactionDeleted {

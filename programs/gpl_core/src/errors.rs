@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 pub enum GumError {
     URITooLong,
     CannotConnectToSelf,
+    UnauthorizedSigner,
 }
 
 #[error_code]

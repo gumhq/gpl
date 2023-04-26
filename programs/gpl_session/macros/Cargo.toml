@@ -1,0 +1,13 @@
+[package]
+name = "gpl-session-macros"
+version = "0.1.0"
+edition = "2021"
+authors = ["Gum Core Dev <hello@gum.fun>"]
+license = "GPL-3.0-or-later"
+description = "GPL Session Macros"
+repository = "https://github.com/gumhq/gpl"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gpl-session-macros-attribute = { version = "0.1.0", path = "attribute" }

@@ -1,7 +1,21 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_lang::system_program;
 
+#[cfg(feature = "no-entrypoint")]
+pub use gpl_session_macros::*;
+
 declare_id!("3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE");
+
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    name: "gpl_session",
+    project_url: "https://gum.fun",
+    contacts: "email:hello@gum.fun,twitter:@gumisfunn",
+    policy: "",
+    preferred_languages: "en",
+    source_code: "https://github.com/gumhq/gpl"
+}
 
 #[program]
 pub mod gpl_session {
@@ -43,6 +57,7 @@ pub struct CreateSessionToken<'info> {
     )]
     pub session_token: Account<'info, SessionToken>,
 
+    #[account(mut)]
     pub session_signer: Signer<'info>,
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -85,7 +100,7 @@ pub fn create_session_token_handler(
                     to: ctx.accounts.session_signer.to_account_info(),
                 },
             ),
-            100000,
+            LAMPORTS_PER_SOL.checked_div(100).unwrap(),
         )?;
     }
 
@@ -128,8 +143,16 @@ pub fn revoke_session_token_handler(_: Context<RevokeSessionToken>) -> Result<()
     Ok(())
 }
 
+pub struct ValidityChecker<'info> {
+    pub session_token: Account<'info, SessionToken>,
+    pub session_signer: Signer<'info>,
+    pub authority: Pubkey,
+    pub target_program: Pubkey,
+}
+
 // SessionToken Account
 #[account]
+#[derive(Copy)]
 pub struct SessionToken {
     pub authority: Pubkey,
     pub target_program: Pubkey,
@@ -141,10 +164,50 @@ impl SessionToken {
     pub const LEN: usize = 8 + std::mem::size_of::<Self>();
     pub const SEED_PREFIX: &'static str = "session_token";
 
-    // check if the token is valid
-    pub fn is_valid(&self) -> Result<bool> {
+    fn is_expired(&self) -> Result<bool> {
         let now = Clock::get()?.unix_timestamp;
         Ok(now < self.valid_until)
+    }
+
+    // validate the token
+    pub fn validate(&self, ctx: ValidityChecker) -> Result<bool> {
+        let target_program = ctx.target_program;
+        let session_signer = ctx.session_signer.key();
+        let authority = ctx.authority.key();
+
+        // Check the PDA seeds
+        let seeds = &[
+            SessionToken::SEED_PREFIX.as_bytes(),
+            target_program.as_ref(),
+            session_signer.as_ref(),
+            authority.as_ref(),
+        ];
+
+        let (pda, _) = Pubkey::find_program_address(seeds, &crate::id());
+
+        require_eq!(pda, ctx.session_token.key(), SessionError::InvalidToken);
+
+        // Check if the token has expired
+        self.is_expired()
+    }
+}
+
+pub trait Session<'info> {
+    fn session_token(&self) -> Option<Account<'info, SessionToken>>;
+    fn session_signer(&self) -> Signer<'info>;
+    fn session_authority(&self) -> Pubkey;
+    fn target_program(&self) -> Pubkey;
+
+    fn is_valid(&self) -> Result<bool> {
+        let session_token = self.session_token().ok_or(SessionError::NoToken)?;
+        let validity_ctx = ValidityChecker {
+            session_token: session_token.clone(),
+            session_signer: self.session_signer(),
+            authority: self.session_authority(),
+            target_program: self.target_program(),
+        };
+        // Check if the token is valid
+        session_token.validate(validity_ctx)
     }
 }
 
@@ -152,4 +215,8 @@ impl SessionToken {
 pub enum SessionError {
     #[msg("Requested validity is too long")]
     ValidityTooLong,
+    #[msg("Invalid session token")]
+    InvalidToken,
+    #[msg("No session token provided")]
+    NoToken,
 }

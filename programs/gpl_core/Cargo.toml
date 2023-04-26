@@ -1,8 +1,11 @@
 [package]
-name = "gpl_core"
-version = "0.1.0"
-description = "Gum Protocol Core"
+name = "gpl-core"
+version = "1.0.0"
+description = "Gum Protocol Core (GPL Core)"
 edition = "2021"
+authors = ["Gum Core Dev <hello@gum.fun>"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/gumhq/gpl"
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -16,7 +19,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.26.0"
+anchor-lang = { version = "0.26.0" }
+gpl-session = { version = "0.2.0", path = "../gpl_session", features = ["no-entrypoint"] }
 gpl_nameservice = { version = "0.1.0", path = "../gpl_nameservice", features = ["no-entrypoint"] }
 solana-security-txt = "1.1.0"
 strum = "0.24.1"

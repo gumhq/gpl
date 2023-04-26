@@ -1,8 +1,11 @@
 [package]
-name = "gpl_nameservice"
+name = "gpl-nameservice"
 version = "0.1.0"
-description = "Created with Anchor"
 edition = "2021"
+authors = ["Gum Core Dev <hello@gum.fun>"]
+license = "GPL-3.0-or-later"
+description = "Gum Nameservice Protocol (GPL Nameservice)"
+repository = "https://github.com/gumhq/gpl"
 
 [lib]
 crate-type = ["cdylib", "lib"]

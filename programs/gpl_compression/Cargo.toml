@@ -1,8 +1,11 @@
 [package]
-name = "gpl_compression"
+name = "gpl-compression"
 version = "0.1.1"
-description = "Created with Anchor"
 edition = "2021"
+authors = ["Gum Core Dev <hello@gum.fun>"]
+license = "GPL-3.0-or-later"
+description = "Gum Compression Program (GPL Compression)"
+repository = "https://github.com/gumhq/gpl"
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -17,6 +20,6 @@ default = []
 
 [dependencies]
 anchor-lang = "0.26.0"
-gpl_core = { version = "0.1.0", path = "../gpl_core", features = ["cpi"] }
+gpl-core = { version = "1.0.0", path = "../gpl_core", features = ["cpi"] }
 solana-security-txt = "1.1.0"
 spl-account-compression = {version = "0.1.7", features = ["cpi"]}

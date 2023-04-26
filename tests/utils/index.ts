@@ -10,6 +10,8 @@ import {
 import { GplCompression } from "../../target/types/gpl_compression";
 import { GplCore } from "../../target/types/gpl_core";
 import { GplNameservice } from "../../target/types/gpl_nameservice";
+import { GplSession } from "../../target/types/gpl_session";
+
 import pkg from "js-sha3";
 
 import {
@@ -26,6 +28,7 @@ const { keccak_256 } = pkg;
 const provider = anchor.getProvider();
 
 export const gpl_core = anchor.workspace.GplCore as anchor.Program<GplCore>;
+
 export const gpl_compression = anchor.workspace
   .GplCompression as anchor.Program<GplCompression>;
 export const gpl_nameservice = anchor.workspace
@@ -91,6 +94,32 @@ export async function createGumDomain(
     .rpc();
 
   return nameRecord;
+}
+
+export const gpl_session = anchor.workspace
+  .GplSession as anchor.Program<GplSession>;
+
+export async function new_session(
+  user: PublicKey,
+  targetProgram: PublicKey,
+  authority?: Keypair
+): Promise<{ sessionPDA: PublicKey; sessionSigner: Keypair }> {
+  const sessionSigner = Keypair.generate();
+  const sessionTx = gpl_session.methods.createSession(true, null).accounts({
+    authority: user,
+    sessionSigner: sessionSigner.publicKey,
+    targetProgram,
+  });
+  const sessionPubKeys = await sessionTx.pubkeys();
+  const sessionPDA = sessionPubKeys.sessionToken as PublicKey;
+
+  if (authority !== undefined) {
+    await sessionTx.signers([sessionSigner, authority]).rpc();
+  } else {
+    await sessionTx.signers([sessionSigner]).rpc();
+  }
+
+  return { sessionPDA, sessionSigner };
 }
 
 export function assert_tree(
