@@ -9,26 +9,20 @@ const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 anchor.setProvider(anchor.AnchorProvider.env());
 
 describe("Post", async () => {
-  let userPDA: anchor.web3.PublicKey;
   let profilePDA: anchor.web3.PublicKey;
   let postPDA: anchor.web3.PublicKey;
 
   before(async () => {
     // Create a user
     const randomHash = randombytes(32);
-    const userTx = program.methods.createUser(randomHash);
-    const userPubKeys = await userTx.pubkeys();
-    userPDA = userPubKeys.user as anchor.web3.PublicKey;
-    await userTx.rpc();
-
     const gumTld = await createGumTld();
 
     // Create a profile
     const profileMetdataUri = "https://example.com";
     const screenName = await createGumDomain(gumTld, "foobarq3eqw");
     const profileTx = program.methods
-      .createProfile("Personal", profileMetdataUri)
-      .accounts({ user: userPDA, screenName });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();
@@ -39,7 +33,7 @@ describe("Post", async () => {
     const metadataUri = "This is a test post";
     const post = program.methods
       .createPost(metadataUri, randomHash)
-      .accounts({ user: userPDA, profile: profilePDA });
+      .accounts({ profile: profilePDA });
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;
     await post.rpc();
@@ -52,7 +46,7 @@ describe("Post", async () => {
     const metadataUri = "This is an updated test post";
     const post = program.methods
       .updatePost(metadataUri)
-      .accounts({ user: userPDA, profile: profilePDA, post: postPDA });
+      .accounts({ profile: profilePDA, post: postPDA });
     await post.rpc();
     const postAccount = await program.account.post.fetch(postPDA);
     expect(postAccount.metadataUri).is.equal(metadataUri);
@@ -62,7 +56,7 @@ describe("Post", async () => {
   it("should delete a post", async () => {
     const post = program.methods
       .deletePost()
-      .accounts({ user: userPDA, profile: profilePDA, post: postPDA });
+      .accounts({ profile: profilePDA, post: postPDA });
     await post.rpc();
     try {
       await program.account.post.fetch(postPDA);

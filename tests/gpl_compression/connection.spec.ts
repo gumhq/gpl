@@ -30,7 +30,6 @@ const rpcConnection = anchor.getProvider().connection;
 describe("Connection Compression", async () => {
   let payer: Keypair;
   let merkleTree: PublicKey;
-  let userPDA: PublicKey;
   let profilePDA: PublicKey;
   let testProfilePDA: anchor.web3.PublicKey;
   let treeConfigPDA: PublicKey;
@@ -55,11 +54,6 @@ describe("Connection Compression", async () => {
 
     // Set up a user
     const randomHash = randomBytes(32);
-    const userTx = gpl_core.methods.createUser(randomHash).accounts({
-      authority: payer.publicKey,
-    });
-    userPDA = (await userTx.pubkeys()).user;
-    await userTx.signers([payer]).rpc();
 
     const gumTld = await createGumTld();
 
@@ -71,8 +65,8 @@ describe("Connection Compression", async () => {
       payer
     );
     const profileTx = gpl_core.methods
-      .createProfile("Personal", profileMetdataUri)
-      .accounts({ user: userPDA, authority: payer.publicKey, screenName });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ authority: payer.publicKey, screenName });
     profilePDA = (await profileTx.pubkeys()).profile;
     await profileTx.signers([payer]).rpc();
 
@@ -81,13 +75,6 @@ describe("Connection Compression", async () => {
     await airdrop(testUser.publicKey);
 
     const randomTestHash = randomBytes(32);
-    const createTestUser = gpl_core.methods
-      .createUser(randomTestHash)
-      .accounts({ authority: testUser.publicKey });
-    const testUserPubKeys = await createTestUser.pubkeys();
-    let testUserPDA = testUserPubKeys.user as anchor.web3.PublicKey;
-
-    await createTestUser.signers([testUser]).rpc();
 
     // Create a testProfile
     const testProfileMetdataUri = "https://example.com";
@@ -97,9 +84,8 @@ describe("Connection Compression", async () => {
       testUser
     );
     const testProfile = gpl_core.methods
-      .createProfile("Personal", testProfileMetdataUri)
+      .createProfile(randomTestHash, testProfileMetdataUri)
       .accounts({
-        user: testUserPDA,
         authority: testUser.publicKey,
         screenName: testScreenName,
       });
@@ -115,7 +101,6 @@ describe("Connection Compression", async () => {
     await gpl_compression.methods
       .createCompressedConnection()
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         toProfile: testProfilePDA,
         treeConfig: treeConfigPDA,
@@ -159,7 +144,6 @@ describe("Connection Compression", async () => {
     await gpl_compression.methods
       .createCompressedConnection()
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         toProfile: testProfilePDA,
         treeConfig: treeConfigPDA,
@@ -204,7 +188,6 @@ describe("Connection Compression", async () => {
     await gpl_compression.methods
       .deleteCompressedConnection(proof.root, index)
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         toProfile: testProfilePDA,
         treeConfig: treeConfigPDA,

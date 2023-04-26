@@ -15,8 +15,6 @@ describe("Connection", async () => {
   let rpcConnection: anchor.web3.Connection;
   let testUser: anchor.web3.Keypair;
   let testUserWallet: NodeWallet;
-  let userPDA: anchor.web3.PublicKey;
-  let testUserPDA: anchor.web3.PublicKey;
   let profilePDA: anchor.web3.PublicKey;
   let testProfilePDA: anchor.web3.PublicKey;
   let connectionPDA: anchor.web3.PublicKey;
@@ -28,10 +26,6 @@ describe("Connection", async () => {
     );
     // Create a user
     const randomHash = randombytes(32);
-    const userTx = program.methods.createUser(randomHash);
-    const userPubKeys = await userTx.pubkeys();
-    userPDA = userPubKeys.user as anchor.web3.PublicKey;
-    await userTx.rpc();
 
     const gumTld = await createGumTld();
     const screenName = await createGumDomain(gumTld, "foobar");
@@ -39,8 +33,8 @@ describe("Connection", async () => {
     // Create a profile
     const profileMetdataUri = "https://example.com";
     const profileTx = program.methods
-      .createProfile("Personal", profileMetdataUri)
-      .accounts({ user: userPDA, screenName });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();
@@ -50,31 +44,13 @@ describe("Connection", async () => {
     testUserWallet = new NodeWallet(testUser);
     await airdrop(testUser.publicKey);
 
-    const randomTestHash = randombytes(32);
-    const createTestUser = program.methods
-      .createUser(randomTestHash)
-      .accounts({ authority: testUser.publicKey });
-    const testUserPubKeys = await createTestUser.pubkeys();
-    testUserPDA = testUserPubKeys.user as anchor.web3.PublicKey;
-    const testUserTx = await createTestUser.transaction();
-    testUserTx.recentBlockhash = (
-      await rpcConnection.getLatestBlockhash()
-    ).blockhash;
-    testUserTx.feePayer = testUser.publicKey;
-    const signedTestUserTransaction = await testUserWallet.signTransaction(
-      testUserTx
-    );
-    await sendAndConfirmTransaction(rpcConnection, signedTestUserTransaction, [
-      testUser,
-    ]);
-
     // Create a testProfile
     const testProfileMetdataUri = "https://example.com";
+    const testRandomHash = randombytes(32);
     const testScreenName = await createGumDomain(gumTld, "test", testUser);
     const testProfile = program.methods
-      .createProfile("Personal", testProfileMetdataUri)
+      .createProfile(testRandomHash, testProfileMetdataUri)
       .accounts({
-        user: testUserPDA,
         authority: testUser.publicKey,
         screenName: testScreenName,
       });
@@ -97,7 +73,6 @@ describe("Connection", async () => {
     const connection = program.methods.createConnection().accounts({
       fromProfile: profilePDA,
       toProfile: testProfilePDA,
-      user: userPDA,
     });
     const pubKeys = await connection.pubkeys();
     connectionPDA = pubKeys.connection as anchor.web3.PublicKey;
@@ -119,7 +94,6 @@ describe("Connection", async () => {
       fromProfile: profilePDA,
       toProfile: testProfilePDA,
       connection: connectionPDA,
-      user: userPDA,
     });
     await connection.rpc();
 

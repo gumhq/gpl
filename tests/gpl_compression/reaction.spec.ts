@@ -33,7 +33,6 @@ describe("Reaction Compression", async () => {
   let treeConfigPDA: PublicKey;
   let offChainTree: MerkleTree;
 
-  let userPDA: PublicKey;
   let profilePDA: PublicKey;
   let postPDA: PublicKey;
   let reactionPDA: PublicKey;
@@ -55,13 +54,6 @@ describe("Reaction Compression", async () => {
     offChainTree = treeResult.offChainTree;
 
     const randomHash = randomBytes(32);
-    // @ts-ignore
-    const userTx = gpl_core.methods.createUser(randomHash).accounts({
-      authority: payer.publicKey,
-    });
-    const userPubKeys = await userTx.pubkeys();
-    userPDA = userPubKeys.user as anchor.web3.PublicKey;
-    await userTx.signers([payer]).rpc();
 
     // Create a profile
     const profileMetdataUri = "https://example.com";
@@ -72,8 +64,8 @@ describe("Reaction Compression", async () => {
       payer
     );
     const profileTx = gpl_core.methods
-      .createProfile("Personal", profileMetdataUri)
-      .accounts({ user: userPDA, authority: payer.publicKey, screenName });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ authority: payer.publicKey, screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.signers([payer]).rpc();
@@ -85,7 +77,6 @@ describe("Reaction Compression", async () => {
       // @ts-ignore
       .createPost(metadataUri, postRandomHash)
       .accounts({
-        user: userPDA,
         profile: profilePDA,
         authority: payer.publicKey,
       });
@@ -107,7 +98,6 @@ describe("Reaction Compression", async () => {
         0
       )
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,
@@ -165,7 +155,6 @@ describe("Reaction Compression", async () => {
         index
       )
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,
@@ -218,7 +207,6 @@ describe("Reaction Compression", async () => {
       // @ts-ignore
       .deleteCompressedReaction(postPDA, "Haha", proof.root, index)
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,

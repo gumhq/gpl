@@ -30,7 +30,6 @@ const rpcConnection = anchor.getProvider().connection;
 describe("Post Compression", async () => {
   let payer: Keypair;
   let merkleTree: PublicKey;
-  let userPDA: PublicKey;
   let profilePDA: PublicKey;
   let treeConfigPDA: PublicKey;
   let offChainTree: MerkleTree;
@@ -51,13 +50,7 @@ describe("Post Compression", async () => {
     treeConfigPDA = treeResult.treeConfigPDA;
     offChainTree = treeResult.offChainTree;
 
-    // Set up a user
     const randomHash = randomBytes(32);
-    const userTx = gpl_core.methods.createUser(randomHash).accounts({
-      authority: payer.publicKey,
-    });
-    userPDA = (await userTx.pubkeys()).user;
-    await userTx.signers([payer]).rpc();
 
     const gumTld = await createGumTld();
 
@@ -70,8 +63,8 @@ describe("Post Compression", async () => {
       payer
     );
     const profileTx = gpl_core.methods
-      .createProfile("Personal", profileMetadataUri)
-      .accounts({ user: userPDA, authority: payer.publicKey, screenName });
+      .createProfile(randomHash, profileMetadataUri)
+      .accounts({ authority: payer.publicKey, screenName });
     profilePDA = (await profileTx.pubkeys()).profile;
     await profileTx.signers([payer]).rpc();
   });
@@ -83,7 +76,6 @@ describe("Post Compression", async () => {
     await gpl_compression.methods
       .createCompressedPost(metadataUri, randomHash)
       .accounts({
-        user: userPDA,
         profile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,
@@ -127,7 +119,6 @@ describe("Post Compression", async () => {
     await gpl_compression.methods
       .createCompressedPost(metadataUri, randomHash)
       .accounts({
-        user: userPDA,
         profile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,
@@ -174,7 +165,6 @@ describe("Post Compression", async () => {
         index
       )
       .accounts({
-        user: userPDA,
         profile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,
@@ -218,7 +208,6 @@ describe("Post Compression", async () => {
       //@ts-ignore
       .createCompressedPost(metadataUri, randomHash)
       .accounts({
-        user: userPDA,
         profile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,
@@ -264,7 +253,6 @@ describe("Post Compression", async () => {
         index
       )
       .accounts({
-        user: userPDA,
         profile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,

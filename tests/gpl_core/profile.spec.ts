@@ -9,18 +9,10 @@ const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 anchor.setProvider(anchor.AnchorProvider.env());
 
 describe("Profile", async () => {
-  let userPDA: anchor.web3.PublicKey;
   let profilePDA: anchor.web3.PublicKey;
   let gumTld: anchor.web3.PublicKey;
 
   before(async () => {
-    // Create a user
-    const randomHash = randombytes(32);
-    const tx = program.methods.createUser(randomHash);
-    const pubKeys = await tx.pubkeys();
-    userPDA = pubKeys.user as anchor.web3.PublicKey;
-    await tx.rpc();
-
     // Create gum tld
     gumTld = await createGumTld();
   });
@@ -28,24 +20,23 @@ describe("Profile", async () => {
   it("should create a profile", async () => {
     const profileMetdataUri = "https://example.com";
     const screenName = await createGumDomain(gumTld, "foobar123123");
+    // Create a user
+    const randomHash = randombytes(32);
 
     const tx = program.methods
-      .createProfile("Personal", profileMetdataUri)
-      .accounts({ user: userPDA, screenName });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ screenName });
     const pubKeys = await tx.pubkeys();
     profilePDA = pubKeys.profile as anchor.web3.PublicKey;
     await tx.rpc();
     const profileAccount = await program.account.profile.fetch(profilePDA);
-    expect(profileAccount.user.toString()).is.equal(userPDA.toString());
-    expect(profileAccount.namespace.toString()).is.equal(
-      { personal: {} }.toString()
-    );
+    expect(profileAccount.metadataUri).to.equal(profileMetdataUri);
   });
 
   it("should delete a profile", async () => {
     const tx = program.methods
       .deleteProfile()
-      .accounts({ user: userPDA, profile: profilePDA });
+      .accounts({ profile: profilePDA });
     await tx.rpc();
     try {
       await program.account.profile.fetch(profilePDA);

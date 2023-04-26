@@ -17,19 +17,14 @@ describe("Reaction", async () => {
   before(async () => {
     // Create a user
     const randomHash = randombytes(32);
-    const userTx = program.methods.createUser(randomHash);
-    const userPubKeys = await userTx.pubkeys();
-    userPDA = userPubKeys.user as anchor.web3.PublicKey;
-    await userTx.rpc();
-
     const gumTld = await createGumTld();
     const screenName = await createGumDomain(gumTld, "foobarasdfas");
 
     // Create a profile
     const profileMetdataUri = "https://example.com";
     const profileTx = program.methods
-      .createProfile("Personal", profileMetdataUri)
-      .accounts({ user: userPDA, screenName });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();
@@ -39,7 +34,7 @@ describe("Reaction", async () => {
     const metadataUri = "This is a test post";
     const post = program.methods
       .createPost(metadataUri, postRandomHash)
-      .accounts({ user: userPDA, profile: profilePDA });
+      .accounts({ profile: profilePDA });
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;
     await post.rpc();
@@ -48,7 +43,7 @@ describe("Reaction", async () => {
   it("should create a reaction", async () => {
     const reaction = program.methods
       .createReaction("Haha")
-      .accounts({ toPost: postPDA, fromProfile: profilePDA, user: userPDA });
+      .accounts({ toPost: postPDA, fromProfile: profilePDA });
     const reactionPubKeys = await reaction.pubkeys();
     reactionPDA = reactionPubKeys.reaction as anchor.web3.PublicKey;
     await reaction.rpc();
@@ -67,7 +62,6 @@ describe("Reaction", async () => {
     const reaction = program.methods.deleteReaction().accounts({
       toPost: postPDA,
       fromProfile: profilePDA,
-      user: userPDA,
       reaction: reactionPDA,
     });
     await reaction.rpc();
