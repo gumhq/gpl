@@ -1,6 +1,6 @@
 use std::convert::AsRef;
 
-use gpl_core::state::{Post, Profile, User};
+use gpl_core::state::{Post, Profile};
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::keccak::hashv;
@@ -27,25 +27,13 @@ pub struct CreateCompressedComment<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub from_profile: Account<'info, Profile>,
-
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub from_profile: Account<'info, Profile>,
 
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
@@ -139,7 +127,6 @@ pub fn create_compressed_comment_handler<'info>(
         post_bump,
         reply_to,
         profile: *ctx.accounts.from_profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,

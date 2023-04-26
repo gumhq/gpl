@@ -2,9 +2,9 @@ use anchor_lang::Discriminator;
 use std::convert::AsRef;
 use std::str::FromStr;
 
+use gpl_core::state::Profile;
 use gpl_core::state::Reaction;
 use gpl_core::state::ReactionType;
-use gpl_core::state::{Profile, User};
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::keccak::hashv;
@@ -30,25 +30,13 @@ pub struct CreateCompressedReaction<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub from_profile: Account<'info, Profile>,
-
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub from_profile: Account<'info, Profile>,
 
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
@@ -148,7 +136,6 @@ pub fn create_compressed_reaction_handler<'info>(
         reaction_bump,
         asset_id,
         index: 0, //TODO: get the index
-        user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
     });
 
@@ -162,25 +149,13 @@ pub struct DeleteCompressedReaction<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub from_profile: Account<'info, Profile>,
-
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub from_profile: Account<'info, Profile>,
 
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
@@ -262,7 +237,6 @@ pub fn delete_compressed_reaction_handler<'info>(
         reaction_bump,
         asset_id,
         index,
-        user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
     });
 

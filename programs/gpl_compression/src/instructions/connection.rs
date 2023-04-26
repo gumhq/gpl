@@ -6,7 +6,7 @@ use gpl_core::errors::ConnectionError;
 use spl_account_compression::wrap_application_data_v1;
 use spl_account_compression::Node;
 
-use gpl_core::state::{Connection, Profile, User};
+use gpl_core::state::{Connection, Profile};
 
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
@@ -24,34 +24,14 @@ pub struct CreateCompressedConnection<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub from_profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            PROFILE_PREFIX_SEED.as_bytes(),
-            to_profile.namespace.as_ref().as_bytes(),
-            to_profile.user.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-    )]
-    pub to_profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub from_profile: Account<'info, Profile>,
+    pub to_profile: Account<'info, Profile>,
 
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
@@ -128,7 +108,6 @@ pub fn create_compressed_connection_handler(
         from_profile: *from_profile.to_account_info().key,
         to_profile: *to_profile.to_account_info().key,
         asset_id,
-        user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
         index: 0 // TODO: Get the index from the tree
     });
@@ -144,34 +123,14 @@ pub struct DeleteCompressedConnection<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub from_profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            PROFILE_PREFIX_SEED.as_bytes(),
-            to_profile.namespace.as_ref().as_bytes(),
-            to_profile.user.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-    )]
-    pub to_profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub from_profile: Account<'info, Profile>,
+    pub to_profile: Account<'info, Profile>,
 
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
@@ -255,7 +214,6 @@ pub fn delete_compressed_connection_handler<'info>(
         from_profile: *from_profile.to_account_info().key,
         to_profile: *to_profile.to_account_info().key,
         asset_id,
-        user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
         index
     });
