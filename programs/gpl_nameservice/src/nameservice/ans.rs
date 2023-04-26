@@ -13,12 +13,11 @@ pub struct ANSNameRecord {
     // If `Pubkey::default()` the data is unspecified.
     pub class: Pubkey,
 
-    //TODO: Check with ANS team for the right type here.
     pub expires_at: u64,
 }
 
 impl ANSNameRecord {
-    pub const LEN: usize = 104;
+    pub const LEN: usize = 200;
 }
 
 pub struct ANSNameService;
@@ -31,8 +30,9 @@ impl NameServiceParser for ANSNameService {
     }
 
     fn unpack(record: &AccountInfo) -> Result<ANSNameRecord> {
-        // TODO: Check disciminator
-        let name_record = ANSNameRecord::try_from_slice(&mut &record.data.borrow_mut()[..])?;
+        // discriminators are unique to programs, since we have validations below.
+        // unless we hard code the discriminator value we will have to ignore them for now.
+        let name_record = ANSNameRecord::try_from_slice(&mut &record.data.borrow_mut()[8..])?;
         Ok(name_record)
     }
 
@@ -57,8 +57,14 @@ impl NameServiceParser for ANSNameService {
         // Validate the owner
         Self::validate_owner(record)?;
 
-        if record.data_len() != ANSNameRecord::LEN {
+        // Data size may be longer than the fixed ans record name.
+        if ANSNameRecord::LEN >= record.data_len() {
             return Err(NameServiceError::InvalidDataLength.into());
+        }
+
+        // Check if the owner of the account is ANS program.
+        if record.owner.to_string() != Self::id_str() {
+            return Err(ProgramError::InvalidAccountData.into());
         }
 
         let name_record = Self::unpack(record)?;
