@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use gpl_core::state::ReactionType;
 
 #[event]
 pub struct CompressedPostNew {
@@ -66,7 +67,7 @@ pub struct CompressedReactionNew {
     pub index: u32,
     pub from_profile: Pubkey,
     pub to_post: Pubkey,
-    pub reaction_type: String,
+    pub reaction_type: ReactionType,
     pub timestamp: i64,
 }
 
@@ -78,7 +79,7 @@ pub struct CompressedReactionDeleted {
     pub index: u32,
     pub from_profile: Pubkey,
     pub to_post: Pubkey,
-    pub reaction_type: String,
+    pub reaction_type: ReactionType,
     pub timestamp: i64,
 }
 

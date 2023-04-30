@@ -2,8 +2,6 @@ use crate::errors::GumError;
 use crate::state::{Post, Profile, Reaction, ReactionType};
 
 use anchor_lang::prelude::*;
-use std::convert::AsRef;
-use std::str::FromStr;
 
 use crate::constants::*;
 use crate::events::{ReactionDeleted, ReactionNew};
@@ -11,14 +9,14 @@ use gpl_session::{session_auth_or, Session, SessionError, SessionToken};
 
 // Create a reaction to a post from a profile
 #[derive(Accounts, Session)]
-#[instruction(reaction_type: String)]
+#[instruction(reaction_type: ReactionType)]
 pub struct CreateReaction<'info> {
     // The account that will be initialized as a Reaction
     #[account(
         init,
         seeds = [
             REACTION_PREFIX_SEED.as_bytes(),
-            reaction_type.as_bytes(),
+            reaction_type.as_ref(),
             to_post.to_account_info().key.as_ref(),
             from_profile.to_account_info().key.as_ref(),
         ],
@@ -55,16 +53,22 @@ pub struct CreateReaction<'info> {
     ctx.accounts.from_profile.authority.key() == ctx.accounts.authority.key(),
     GumError::UnauthorizedSigner
 )]
-pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
+pub fn create_reaction_handler(
+    ctx: Context<CreateReaction>,
+    reaction_type: ReactionType,
+) -> Result<()> {
+    // Validate the reaction type
+    reaction_type.validate()?;
+
     let reaction = &mut ctx.accounts.reaction;
-    reaction.reaction_type = ReactionType::from_str(&reaction_type).unwrap();
+    reaction.reaction_type = reaction_type;
     reaction.to_post = *ctx.accounts.to_post.to_account_info().key;
     reaction.from_profile = *ctx.accounts.from_profile.to_account_info().key;
 
     // emit a new reaction event
     emit!(ReactionNew {
         reaction: *reaction.to_account_info().key,
-        reaction_type: reaction.reaction_type,
+        reaction_type: reaction.reaction_type.clone(),
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
@@ -80,7 +84,7 @@ pub struct DeleteReaction<'info> {
         mut,
         seeds = [
             REACTION_PREFIX_SEED.as_bytes(),
-            reaction.reaction_type.as_ref().as_bytes(),
+            reaction.reaction_type.as_ref(),
             reaction.to_post.as_ref(),
             reaction.from_profile.as_ref(),
         ],
@@ -125,7 +129,7 @@ pub fn delete_reaction_handler(ctx: Context<DeleteReaction>) -> Result<()> {
     // emit a reaction deleted event
     emit!(ReactionDeleted {
         reaction: *ctx.accounts.reaction.to_account_info().key,
-        reaction_type: ctx.accounts.reaction.reaction_type,
+        reaction_type: ctx.accounts.reaction.reaction_type.clone(),
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,

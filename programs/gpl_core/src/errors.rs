@@ -5,6 +5,7 @@ pub enum GumError {
     URITooLong,
     CannotConnectToSelf,
     UnauthorizedSigner,
+    InvalidEmoji,
 }
 
 #[error_code]

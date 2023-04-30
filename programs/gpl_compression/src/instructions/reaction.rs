@@ -1,6 +1,5 @@
 use anchor_lang::Discriminator;
 use std::convert::AsRef;
-use std::str::FromStr;
 
 use gpl_core::state::Profile;
 use gpl_core::state::Reaction;
@@ -65,11 +64,14 @@ pub struct CreateCompressedReaction<'info> {
 pub fn create_compressed_reaction_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateCompressedReaction<'info>>,
     to_post: Pubkey,
-    reaction_type: String,
+    reaction_type: ReactionType,
     post_root: [u8; 32],
     post_leaf: [u8; 32],
     post_index: u32,
 ) -> Result<()> {
+    // Validate the reaction type
+    reaction_type.validate()?;
+
     let from_profile = &ctx.accounts.from_profile;
 
     // Check if the to_post exists
@@ -89,7 +91,7 @@ pub fn create_compressed_reaction_handler<'info>(
 
     let reaction_seeds = [
         REACTION_PREFIX_SEED.as_bytes(),
-        reaction_type.as_bytes(),
+        reaction_type.as_ref(),
         to_post.as_ref(),
         from_profile.to_account_info().key.as_ref(),
     ];
@@ -104,7 +106,7 @@ pub fn create_compressed_reaction_handler<'info>(
     let reaction = Reaction {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: ReactionType::from_str(&reaction_type).unwrap(),
+        reaction_type: reaction_type.clone(),
     };
 
     let leaf = LeafSchema {
@@ -177,14 +179,17 @@ pub struct DeleteCompressedReaction<'info> {
 pub fn delete_compressed_reaction_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, DeleteCompressedReaction<'info>>,
     to_post: Pubkey,
-    reaction_type: String,
+    reaction_type: ReactionType,
     root: [u8; 32],
     index: u32,
 ) -> Result<()> {
+    // Validate the reaction type
+    reaction_type.validate()?;
+
     let from_profile = &ctx.accounts.from_profile;
     let reaction_seeds = [
         REACTION_PREFIX_SEED.as_bytes(),
-        reaction_type.as_bytes(),
+        reaction_type.as_ref(),
         to_post.as_ref(),
         from_profile.to_account_info().key.as_ref(),
     ];
@@ -199,7 +204,7 @@ pub fn delete_compressed_reaction_handler<'info>(
     let old_reaction = Reaction {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: ReactionType::from_str(&reaction_type).unwrap(),
+        reaction_type: reaction_type.clone(),
     };
 
     let old_leaf = LeafSchema {

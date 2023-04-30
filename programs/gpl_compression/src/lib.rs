@@ -9,6 +9,7 @@ mod utils;
 
 use crate::errors::GplCompressionError;
 use crate::instructions::*;
+use gpl_core::state::ReactionType;
 
 declare_id!("41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW");
 
@@ -92,7 +93,7 @@ pub mod gpl_compression {
     pub fn create_compressed_reaction<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateCompressedReaction<'info>>,
         to_post: Pubkey,
-        reaction_type: String,
+        reaction_type: ReactionType,
         post_root: [u8; 32],
         post_leaf: [u8; 32],
         post_index: u32,
@@ -111,7 +112,7 @@ pub mod gpl_compression {
     pub fn delete_compressed_reaction<'info>(
         ctx: Context<'_, '_, '_, 'info, DeleteCompressedReaction<'info>>,
         to_post: Pubkey,
-        reaction_type: String,
+        reaction_type: ReactionType,
         root: [u8; 32],
         index: u32,
     ) -> Result<()> {
