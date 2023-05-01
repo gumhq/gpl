@@ -8,7 +8,6 @@ pub mod instructions;
 pub mod state;
 
 use instructions::*;
-use state::ReactionType;
 
 declare_id!("CDDMdCAWB5AXgvEy7XJRggAu37QPG1b9aJXndZoPUkkm");
 
@@ -85,10 +84,7 @@ pub mod gpl_core {
     }
 
     // create a reaction account with reaction type
-    pub fn create_reaction(
-        ctx: Context<CreateReaction>,
-        reaction_type: ReactionType,
-    ) -> Result<()> {
+    pub fn create_reaction(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
         create_reaction_handler(ctx, reaction_type)
     }
 

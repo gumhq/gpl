@@ -1,4 +1,3 @@
-use crate::state::ReactionType;
 use anchor_lang::prelude::*;
 
 // This event is emitted whenever a new profile is created.
@@ -90,7 +89,7 @@ pub struct ConnectionDeleted {
 #[event]
 pub struct ReactionNew {
     pub reaction: Pubkey,
-    pub reaction_type: ReactionType,
+    pub reaction_type: String,
     pub from_profile: Pubkey,
     pub to_post: Pubkey,
     pub timestamp: i64,
@@ -100,7 +99,7 @@ pub struct ReactionNew {
 #[event]
 pub struct ReactionDeleted {
     pub reaction: Pubkey,
-    pub reaction_type: ReactionType,
+    pub reaction_type: String,
     pub from_profile: Pubkey,
     pub to_post: Pubkey,
     pub timestamp: i64,

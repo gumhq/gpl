@@ -36,6 +36,7 @@ describe("Reaction Compression", async () => {
   let profilePDA: PublicKey;
   let postPDA: PublicKey;
   let reactionPDA: PublicKey;
+  let emoji = "👍";
 
   beforeEach(async () => {
     // Setup a new keypair and airdrop some SOL
@@ -93,7 +94,7 @@ describe("Reaction Compression", async () => {
       .createCompressedReaction(
         //@ts-ignore
         postPDA,
-        "Haha",
+        emoji,
         postProof.root,
         postProof.leaf,
         0
@@ -121,7 +122,7 @@ describe("Reaction Compression", async () => {
 
     const reactionSeeds = [
       Buffer.from("reaction"),
-      Buffer.from("Haha"),
+      Buffer.from(emoji),
       postPDA.toBuffer(),
       profilePDA.toBuffer(),
     ];
@@ -130,7 +131,7 @@ describe("Reaction Compression", async () => {
       fromProfile: profilePDA,
       toPost: postPDA,
       // Weird anchor trick for passing enums
-      reactionType: { haha: {} },
+      reactionType: { emoji: { emoji } },
     };
 
     const reactionLeaf = await to_leaf(
@@ -150,7 +151,7 @@ describe("Reaction Compression", async () => {
       .createCompressedReaction(
         //@ts-ignore
         postPDA,
-        "Haha",
+        emoji,
         postProof.root,
         postProof.leaf,
         index
@@ -178,7 +179,7 @@ describe("Reaction Compression", async () => {
 
     const reactionSeeds = [
       Buffer.from("reaction"),
-      Buffer.from("Haha"),
+      Buffer.from(emoji),
       postPDA.toBuffer(),
       profilePDA.toBuffer(),
     ];
@@ -187,7 +188,7 @@ describe("Reaction Compression", async () => {
       fromProfile: profilePDA,
       toPost: postPDA,
       // Weird anchor trick for passing enums
-      reactionType: { haha: {} },
+      reactionType: { emoji: { emoji } },
     };
 
     const reactionLeaf = await to_leaf(
@@ -206,7 +207,7 @@ describe("Reaction Compression", async () => {
 
     await gpl_compression.methods
       // @ts-ignore
-      .deleteCompressedReaction(postPDA, "Haha", proof.root, index)
+      .deleteCompressedReaction(postPDA, emoji, proof.root, index)
       .accounts({
         fromProfile: profilePDA,
         treeConfig: treeConfigPDA,

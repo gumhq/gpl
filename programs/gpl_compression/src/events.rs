@@ -67,7 +67,7 @@ pub struct CompressedReactionNew {
     pub index: u32,
     pub from_profile: Pubkey,
     pub to_post: Pubkey,
-    pub reaction_type: ReactionType,
+    pub reaction_type: String,
     pub timestamp: i64,
 }
 
@@ -79,7 +79,7 @@ pub struct CompressedReactionDeleted {
     pub index: u32,
     pub from_profile: Pubkey,
     pub to_post: Pubkey,
-    pub reaction_type: ReactionType,
+    pub reaction_type: String,
     pub timestamp: i64,
 }
 

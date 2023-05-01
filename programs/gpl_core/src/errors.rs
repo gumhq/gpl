@@ -6,6 +6,7 @@ pub enum GumError {
     CannotConnectToSelf,
     UnauthorizedSigner,
     InvalidEmoji,
+    CustomTagTooLong,
 }
 
 #[error_code]

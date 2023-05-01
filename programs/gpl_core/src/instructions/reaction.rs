@@ -1,5 +1,6 @@
 use crate::errors::GumError;
 use crate::state::{Post, Profile, Reaction, ReactionType};
+use std::str::FromStr;
 
 use anchor_lang::prelude::*;
 
@@ -9,7 +10,7 @@ use gpl_session::{session_auth_or, Session, SessionError, SessionToken};
 
 // Create a reaction to a post from a profile
 #[derive(Accounts, Session)]
-#[instruction(reaction_type: ReactionType)]
+#[instruction(reaction_type: String)]
 pub struct CreateReaction<'info> {
     // The account that will be initialized as a Reaction
     #[account(
@@ -53,13 +54,8 @@ pub struct CreateReaction<'info> {
     ctx.accounts.from_profile.authority.key() == ctx.accounts.authority.key(),
     GumError::UnauthorizedSigner
 )]
-pub fn create_reaction_handler(
-    ctx: Context<CreateReaction>,
-    reaction_type: ReactionType,
-) -> Result<()> {
-    // Validate the reaction type
-    reaction_type.validate()?;
-
+pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
+    let reaction_type = ReactionType::from_str(&reaction_type)?;
     let reaction = &mut ctx.accounts.reaction;
     reaction.reaction_type = reaction_type;
     reaction.to_post = *ctx.accounts.to_post.to_account_info().key;
@@ -68,7 +64,7 @@ pub fn create_reaction_handler(
     // emit a new reaction event
     emit!(ReactionNew {
         reaction: *reaction.to_account_info().key,
-        reaction_type: reaction.reaction_type.clone(),
+        reaction_type: reaction.reaction_type.to_string(),
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
@@ -129,7 +125,7 @@ pub fn delete_reaction_handler(ctx: Context<DeleteReaction>) -> Result<()> {
     // emit a reaction deleted event
     emit!(ReactionDeleted {
         reaction: *ctx.accounts.reaction.to_account_info().key,
-        reaction_type: ctx.accounts.reaction.reaction_type.clone(),
+        reaction_type: ctx.accounts.reaction.reaction_type.to_string(),
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,

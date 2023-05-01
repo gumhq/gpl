@@ -16,6 +16,7 @@ describe("Reaction", async () => {
   let profilePDA: anchor.web3.PublicKey;
   let postPDA: anchor.web3.PublicKey;
   let reactionPDA: anchor.web3.PublicKey;
+  let emoji = "👍";
 
   before(async () => {
     // Create a user
@@ -44,7 +45,7 @@ describe("Reaction", async () => {
   });
 
   it("should create a reaction", async () => {
-    const reaction = program.methods.createReaction("Haha").accounts({
+    const reaction = program.methods.createReaction(emoji).accounts({
       toPost: postPDA,
       fromProfile: profilePDA,
       sessionToken: null,

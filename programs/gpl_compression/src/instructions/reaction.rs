@@ -1,5 +1,6 @@
 use anchor_lang::Discriminator;
 use std::convert::AsRef;
+use std::str::FromStr;
 
 use gpl_core::state::Profile;
 use gpl_core::state::Reaction;
@@ -64,13 +65,12 @@ pub struct CreateCompressedReaction<'info> {
 pub fn create_compressed_reaction_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateCompressedReaction<'info>>,
     to_post: Pubkey,
-    reaction_type: ReactionType,
+    reaction_type: String,
     post_root: [u8; 32],
     post_leaf: [u8; 32],
     post_index: u32,
 ) -> Result<()> {
-    // Validate the reaction type
-    reaction_type.validate()?;
+    let reaction_type = ReactionType::from_str(&reaction_type)?;
 
     let from_profile = &ctx.accounts.from_profile;
 
@@ -133,7 +133,7 @@ pub fn create_compressed_reaction_handler<'info>(
     emit!(CompressedReactionNew {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: reaction_type.clone(),
+        reaction_type: reaction_type.to_string(),
         reaction_id,
         reaction_bump,
         asset_id,
@@ -179,12 +179,11 @@ pub struct DeleteCompressedReaction<'info> {
 pub fn delete_compressed_reaction_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, DeleteCompressedReaction<'info>>,
     to_post: Pubkey,
-    reaction_type: ReactionType,
+    reaction_type: String,
     root: [u8; 32],
     index: u32,
 ) -> Result<()> {
-    // Validate the reaction type
-    reaction_type.validate()?;
+    let reaction_type = ReactionType::from_str(&reaction_type)?;
 
     let from_profile = &ctx.accounts.from_profile;
     let reaction_seeds = [
@@ -237,7 +236,7 @@ pub fn delete_compressed_reaction_handler<'info>(
     emit!(CompressedReactionDeleted {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: reaction_type.clone(),
+        reaction_type: reaction_type.to_string(),
         reaction_id,
         reaction_bump,
         asset_id,
