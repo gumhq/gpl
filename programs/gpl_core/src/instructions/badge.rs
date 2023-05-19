@@ -19,7 +19,7 @@ pub struct CreateBadge<'info> {
     )]
     pub badge: Account<'info, Badge>,
     #[account(
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), issuer.key().as_ref()],
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
         bump,
         has_one = authority
     )]
@@ -76,7 +76,7 @@ pub struct UpdateBadge<'info> {
     )]
     pub badge: Account<'info, Badge>,
     #[account(
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), issuer.key().as_ref()],
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), signer.key().as_ref()],
         bump,
     )]
     pub issuer: Account<'info, Issuer>,
@@ -104,7 +104,7 @@ pub fn update_badge_handler(ctx: Context<UpdateBadge>, metadata_uri: String) -> 
 pub struct BurnBadge<'info> {
     #[account(
         mut,
-        seeds = [Badge::SEED_PREFIX.as_bytes(), issuer.key().as_ref()],
+        seeds = [Badge::SEED_PREFIX.as_bytes(), issuer.key().as_ref(), holder.key().as_ref()],
         bump,
         has_one = issuer,
         has_one = holder,
@@ -122,7 +122,7 @@ pub struct BurnBadge<'info> {
     pub holder: Account<'info, Profile>,
 
     #[account(
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), issuer.key().as_ref()],
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), signer.key().as_ref()],
         bump,
     )]
     pub issuer: Account<'info, Issuer>,
@@ -253,7 +253,7 @@ pub fn create_issuer_handler(ctx: Context<CreateIssuer>) -> Result<()> {
 pub struct DeleteIssuer<'info> {
     #[account(
         mut,
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), issuer.key().as_ref()],
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
         bump,
         has_one = authority,
         close = authority
