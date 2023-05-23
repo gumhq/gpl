@@ -104,7 +104,7 @@ describe("Post", async () => {
       const randomHash = randombytes(32);
       const userTx = program.methods
         .createUser(randomHash)
-        .accounts({ authority: randomUser.publicKey });
+        .accounts({ payer: randomUser.publicKey, authority: randomUser.publicKey });
       const userPubKeys = await userTx.pubkeys();
       randomUserPDA = userPubKeys.user;
       const tx = await userTx.transaction();
@@ -122,7 +122,7 @@ describe("Post", async () => {
       // Create a profile
       const testProfile = program.methods
         .createProfile("Personal")
-        .accounts({ user: randomUserPDA, authority: randomUser.publicKey });
+        .accounts({ payer: randomUser.publicKey, user: randomUserPDA, authority: randomUser.publicKey });
       const testProfilePubKeys = await testProfile.pubkeys();
       randomProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
       const testProfileTx = await testProfile.transaction();

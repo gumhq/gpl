@@ -49,7 +49,7 @@ describe("Connection", async () => {
     const randomTestHash = randombytes(32);
     const createTestUser = program.methods
       .createUser(randomTestHash)
-      .accounts({ authority: testUser.publicKey });
+      .accounts({ payer: testUser.publicKey, authority: testUser.publicKey });
     const testUserPubKeys = await createTestUser.pubkeys();
     testUserPDA = testUserPubKeys.user as anchor.web3.PublicKey;
     const testUserTx = await createTestUser.transaction();
@@ -67,7 +67,7 @@ describe("Connection", async () => {
     // Create a testProfile
     const testProfile = program.methods
       .createProfile("Personal")
-      .accounts({ user: testUserPDA, authority: testUser.publicKey });
+      .accounts({ payer: testUser.publicKey, user: testUserPDA, authority: testUser.publicKey });
     const testProfilePubKeys = await testProfile.pubkeys();
     testProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
     const testProfileTx = await testProfile.transaction();

@@ -8,6 +8,8 @@ use crate::state::User;
 #[derive(Accounts)]
 #[instruction(random_hash: [u8;32])]
 pub struct CreateUser<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
     // The account that will be initialized as a user
     #[account(
         init,
@@ -16,12 +18,11 @@ pub struct CreateUser<'info> {
             random_hash.as_ref(),
         ],
         bump,
-        payer = authority,
+        payer = payer,
         space = User::LEN
     )]
     pub user: Account<'info, User>,
     // The authority of the user
-    #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
     pub system_program: Program<'info, System>,
