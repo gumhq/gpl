@@ -7,6 +7,8 @@ pub enum GumError {
     UnauthorizedSigner,
     InvalidEmoji,
     CustomTagTooLong,
+    UnverifiedIssuer,
+    InvalidSignerToVerify,
 }
 
 #[error_code]

@@ -20,6 +20,7 @@ impl Badge {
 #[account]
 pub struct Issuer {
     pub authority: Pubkey,
+    pub verified: bool,
 }
 
 impl Issuer {
@@ -30,7 +31,7 @@ impl Issuer {
 
 #[account]
 pub struct Schema {
-    pub authority: Pubkey,
+    pub issuer: Pubkey,
     pub metadata_uri: String,
     pub random_hash: [u8; 32],
 }

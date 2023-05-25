@@ -2,6 +2,7 @@ use crate::constants::*;
 use crate::errors::GumError;
 use crate::state::MAX_LEN_URI;
 use crate::state::{Badge, Issuer, Profile, Schema};
+use std::str::FromStr;
 
 use anchor_lang::prelude::*;
 
@@ -21,7 +22,8 @@ pub struct CreateBadge<'info> {
     #[account(
         seeds = [Issuer::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
         bump,
-        has_one = authority
+        has_one = authority,
+        constraint = issuer.verified @ GumError::UnverifiedIssuer
     )]
     pub issuer: Account<'info, Issuer>,
 
@@ -78,6 +80,7 @@ pub struct UpdateBadge<'info> {
     #[account(
         seeds = [Issuer::SEED_PREFIX.as_bytes(), signer.key().as_ref()],
         bump,
+        constraint = issuer.verified @ GumError::UnverifiedIssuer
     )]
     pub issuer: Account<'info, Issuer>,
     #[account(
@@ -124,6 +127,7 @@ pub struct BurnBadge<'info> {
     #[account(
         seeds = [Issuer::SEED_PREFIX.as_bytes(), signer.key().as_ref()],
         bump,
+        constraint = issuer.verified @ GumError::UnverifiedIssuer
     )]
     pub issuer: Account<'info, Issuer>,
     #[account(
@@ -151,6 +155,14 @@ pub struct CreateSchema<'info> {
     )]
     pub schema: Account<'info, Schema>,
 
+    #[account(
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
+        bump,
+        constraint = issuer.verified @ GumError::UnverifiedIssuer,
+        has_one = authority
+    )]
+    pub issuer: Account<'info, Issuer>,
+
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -167,7 +179,7 @@ pub fn create_schema_handler(
     let schema = &mut ctx.accounts.schema;
 
     schema.set_inner(Schema {
-        authority: ctx.accounts.authority.key(),
+        issuer: ctx.accounts.issuer.key(),
         metadata_uri,
         random_hash,
     });
@@ -183,9 +195,18 @@ pub struct UpdateSchema<'info> {
         mut,
         seeds = [Schema::SEED_PREFIX.as_bytes(), schema.random_hash.as_ref()],
         bump,
-        has_one = authority
+        has_one = issuer
     )]
     pub schema: Account<'info, Schema>,
+
+    #[account(
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
+        bump,
+        constraint = issuer.verified @ GumError::UnverifiedIssuer,
+        has_one = authority
+    )]
+    pub issuer: Account<'info, Issuer>,
+
     pub authority: Signer<'info>,
 }
 
@@ -207,10 +228,19 @@ pub struct DeleteSchema<'info> {
         mut,
         seeds = [Schema::SEED_PREFIX.as_bytes(), schema.random_hash.as_ref()],
         bump,
-        has_one = authority,
+        has_one = issuer,
         close = authority
     )]
     pub schema: Account<'info, Schema>,
+
+    #[account(
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
+        bump,
+        constraint = issuer.verified @ GumError::UnverifiedIssuer,
+        has_one = authority,
+    )]
+    pub issuer: Account<'info, Issuer>,
+
     pub authority: Signer<'info>,
 }
 
@@ -243,6 +273,7 @@ pub fn create_issuer_handler(ctx: Context<CreateIssuer>) -> Result<()> {
 
     issuer.set_inner(Issuer {
         authority: ctx.accounts.authority.key(),
+        verified: false,
     });
 
     Ok(())
@@ -264,5 +295,35 @@ pub struct DeleteIssuer<'info> {
 
 // Handler to delete an issuer
 pub fn delete_issuer_handler(_: Context<DeleteIssuer>) -> Result<()> {
+    Ok(())
+}
+
+// Verify an issuer
+#[derive(Accounts)]
+pub struct VerifyIssuer<'info> {
+    #[account(
+        mut,
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), issuer.key().as_ref()],
+        bump,
+    )]
+    pub issuer: Account<'info, Issuer>,
+
+    pub signer: Signer<'info>,
+}
+
+// Handler to verify an issuer
+pub fn verify_issuer_handler(ctx: Context<VerifyIssuer>) -> Result<()> {
+    require_eq!(
+        ctx.accounts.signer.key(),
+        // FIXME: Move this to constant byte and importantly use a different key before deploying.
+        // This is a quick hack to test the patch.
+        Pubkey::from_str("Bi2ZL1UijCXwtNYi132NyMDRnzVxpuAVcgsqVuUgee5A").unwrap(),
+        GumError::InvalidSignerToVerify
+    );
+
+    let issuer = &mut ctx.accounts.issuer;
+
+    issuer.verified = true;
+
     Ok(())
 }
