@@ -2,7 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import randombytes from "randombytes";
 import { expect } from "chai";
 import { GplCore } from "../../target/types/gpl_core";
-import { new_session } from "../utils";
+import { airdrop, new_session } from "../utils";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 
@@ -15,6 +15,7 @@ describe("Reaction", async () => {
   let profilePDA: anchor.web3.PublicKey;
   let postPDA: anchor.web3.PublicKey;
   let reactionPDA: anchor.web3.PublicKey;
+  let feePayer: anchor.web3.Keypair;
 
   before(async () => {
     // Create a user
@@ -41,6 +42,10 @@ describe("Reaction", async () => {
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;
     await post.rpc();
+
+    // Create fee payer keypair
+    feePayer = anchor.web3.Keypair.generate();
+    await airdrop(feePayer.publicKey);
   });
 
   it("should create a reaction", async () => {
@@ -83,6 +88,38 @@ describe("Reaction", async () => {
         `Account does not exist or has no data ${reactionPDA.toString()}`
       );
     }
+  });
+
+  it("should create a reaction when a seperate fee payer is specified", async () => {
+    const reaction = program.methods.createReaction("Haha").accounts({
+      payer: feePayer.publicKey,
+      toPost: postPDA,
+      fromProfile: profilePDA,
+      user: userPDA,
+      sessionToken: null,
+    });
+    const reactionPubKeys = await reaction.pubkeys();
+    reactionPDA = reactionPubKeys.reaction as anchor.web3.PublicKey;
+    await reaction.signers([feePayer]).rpc();
+
+    const reactionAccount = await program.account.reaction.fetch(reactionPDA);
+    expect(reactionAccount.toPost.toBase58()).to.equal(postPDA.toBase58());
+    expect(reactionAccount.fromProfile.toBase58()).to.equal(
+      profilePDA.toBase58()
+    );
+    expect(reactionAccount.reactionType.toString()).to.equal(
+      { haha: {} }.toString()
+    );
+
+    // Clean up for next tests
+    await program.methods.deleteReaction().accounts({
+      toPost: postPDA,
+      fromProfile: profilePDA,
+      user: userPDA,
+      reaction: reactionPDA,
+      sessionToken: null,
+      refundReceiver: provider.wallet.publicKey,
+    }).rpc();
   });
 
   describe("Reaction with session token", async () => {
