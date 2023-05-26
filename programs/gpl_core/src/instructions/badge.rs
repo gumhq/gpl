@@ -78,7 +78,7 @@ pub struct UpdateBadge<'info> {
     )]
     pub badge: Account<'info, Badge>,
     #[account(
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), signer.key().as_ref()],
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), issuer.authority.key().as_ref()],
         bump,
         constraint = issuer.verified @ GumError::UnverifiedIssuer
     )]
@@ -125,7 +125,7 @@ pub struct BurnBadge<'info> {
     pub holder: Account<'info, Profile>,
 
     #[account(
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), signer.key().as_ref()],
+        seeds = [Issuer::SEED_PREFIX.as_bytes(), issuer.authority.key().as_ref()],
         bump,
         constraint = issuer.verified @ GumError::UnverifiedIssuer
     )]
@@ -292,7 +292,6 @@ pub struct DeleteIssuer<'info> {
     pub issuer: Account<'info, Issuer>,
     pub authority: Signer<'info>,
 }
-
 // Handler to delete an issuer
 pub fn delete_issuer_handler(_: Context<DeleteIssuer>) -> Result<()> {
     Ok(())
@@ -301,11 +300,7 @@ pub fn delete_issuer_handler(_: Context<DeleteIssuer>) -> Result<()> {
 // Verify an issuer
 #[derive(Accounts)]
 pub struct VerifyIssuer<'info> {
-    #[account(
-        mut,
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), issuer.key().as_ref()],
-        bump,
-    )]
+    #[account(mut)]
     pub issuer: Account<'info, Issuer>,
 
     pub signer: Signer<'info>,
