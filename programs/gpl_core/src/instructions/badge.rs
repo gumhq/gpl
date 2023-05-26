@@ -37,7 +37,7 @@ pub struct CreateBadge<'info> {
     pub holder: Account<'info, Profile>,
 
     #[account(
-        seeds = [Schema::SEED_PREFIX.as_bytes(), schema.authority.key().as_ref()],
+        seeds = [Schema::SEED_PREFIX.as_bytes(), schema.random_hash.as_ref()],
         bump,
     )]
     pub schema: Account<'info, Schema>,
@@ -93,7 +93,7 @@ pub struct UpdateBadge<'info> {
     pub issuer: Account<'info, Issuer>,
 
     #[account(
-        seeds = [Schema::SEED_PREFIX.as_bytes(), schema.authority.key().as_ref()],
+        seeds = [Schema::SEED_PREFIX.as_bytes(), schema.random_hash.as_ref()],
         bump,
     )]
     pub schema: Account<'info, Schema>,
@@ -148,7 +148,7 @@ pub struct BurnBadge<'info> {
     pub issuer: Account<'info, Issuer>,
 
     #[account(
-        seeds = [Schema::SEED_PREFIX.as_bytes(), schema.authority.key().as_ref()],
+        seeds = [Schema::SEED_PREFIX.as_bytes(), schema.random_hash.as_ref()],
         bump,
     )]
     pub schema: Account<'info, Schema>,
