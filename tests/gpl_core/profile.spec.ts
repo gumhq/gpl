@@ -2,7 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import randombytes from "randombytes";
 import { expect } from "chai";
 import { GplCore } from "../../target/types/gpl_core";
-import { createGumDomain, createGumTld } from "../utils";
+import { airdrop, createGumDomain, createGumTld } from "../utils";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 
@@ -15,6 +15,10 @@ describe("Profile", async () => {
   before(async () => {
     // Create gum tld
     gumTld = await createGumTld();
+    let feePayer: anchor.web3.Keypair;
+    // Create fee payer keypair
+    feePayer = anchor.web3.Keypair.generate();
+    await airdrop(feePayer.publicKey);
   });
 
   it("should create a profile", async () => {
@@ -46,5 +50,17 @@ describe("Profile", async () => {
         `Account does not exist or has no data ${profilePDA.toString()}`
       );
     }
+  });
+
+  it("should create a profile when a seperate fee payer is specified", async () => {
+    const profileMetdataUri = "https://example.com";
+    const tx = program.methods
+      .createProfile("Personal", profileMetdataUri)
+      .accounts({ payer: feePayer.publicKey });
+    const pubKeys = await tx.pubkeys();
+    profilePDA = pubKeys.profile as anchor.web3.PublicKey;
+    await tx.signers([feePayer]).rpc();
+    const profileAccount = await program.account.profile.fetch(profilePDA);
+    expect(profileAccount.metadataUri).to.equal(profileMetdataUri);
   });
 });

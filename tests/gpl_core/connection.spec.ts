@@ -15,6 +15,7 @@ anchor.setProvider(anchor.AnchorProvider.env());
 describe("Connection", async () => {
   let rpcConnection: anchor.web3.Connection;
   let testUser: anchor.web3.Keypair;
+  let feePayer: anchor.web3.Keypair;
   let testUserWallet: NodeWallet;
   let profilePDA: anchor.web3.PublicKey;
   let testProfilePDA: anchor.web3.PublicKey;
@@ -45,6 +46,10 @@ describe("Connection", async () => {
     testUserWallet = new NodeWallet(testUser);
     await airdrop(testUser.publicKey);
 
+    // Create a feePayer
+    feePayer = anchor.web3.Keypair.generate();
+    await airdrop(feePayer.publicKey);
+
     // Create a testProfile
     const testProfileMetdataUri = "https://example.com";
     const testRandomHash = randombytes(32);
@@ -52,6 +57,7 @@ describe("Connection", async () => {
     const testProfile = program.methods
       .createProfile(testRandomHash, testProfileMetdataUri)
       .accounts({
+        payer: testUser.publicKey,
         authority: testUser.publicKey,
         screenName: testScreenName,
       });
@@ -110,6 +116,41 @@ describe("Connection", async () => {
         `Account does not exist or has no data ${connectionPDA.toString()}`
       );
     }
+  });
+
+  it("should create a connection when a seperate fee payer is specified", async () => {
+    const createConnection = program.methods.createConnection().accounts({
+      payer: feePayer.publicKey,
+      fromProfile: profilePDA,
+      toProfile: testProfilePDA,
+      sessionToken: null,
+    });
+    const pubKeys = await createConnection.pubkeys();
+    connectionPDA = pubKeys.connection as anchor.web3.PublicKey;
+    await createConnection.signers([feePayer]).rpc();
+
+    const connectionAccount = await program.account.connection.fetch(
+      connectionPDA
+    );
+    expect(connectionAccount.fromProfile.toBase58()).to.equal(
+      profilePDA.toBase58()
+    );
+    expect(connectionAccount.toProfile.toBase58()).to.equal(
+      testProfilePDA.toBase58()
+    );
+
+    // Cleanup for next tests
+    await program.methods
+      .deleteConnection()
+      .accounts({
+        fromProfile: profilePDA,
+        toProfile: testProfilePDA,
+        connection: connectionPDA,
+        sessionToken: null,
+        // @ts-ignore
+        refundReceiver: provider.wallet.publicKey,
+      })
+      .rpc();
   });
 
   describe("Connection with session token", async () => {

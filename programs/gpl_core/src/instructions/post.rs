@@ -14,6 +14,8 @@ use gpl_session::{SessionError, SessionToken};
 #[derive(Accounts, Session)]
 #[instruction(metadata_uri: String, random_hash: [u8;32])]
 pub struct CreatePost<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
     // The account that will be initialized as a Post
     #[account(
         init,
@@ -22,7 +24,7 @@ pub struct CreatePost<'info> {
             random_hash.as_ref(),
         ],
         bump,
-        payer = authority,
+        payer = payer,
         space = Post::LEN
     )]
     pub post: Account<'info, Post>,
@@ -40,8 +42,7 @@ pub struct CreatePost<'info> {
         authority = profile.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
-
-    #[account(mut)]
+    
     pub authority: Signer<'info>,
     // The system program
     pub system_program: Program<'info, System>,
@@ -132,6 +133,8 @@ pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String) -> Re
 #[derive(Accounts, Session)]
 #[instruction(metadata_uri: String, random_hash: [u8;32])]
 pub struct CreateComment<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
     // The account that will be initialized as a Post
     #[account(
         init,
@@ -140,7 +143,7 @@ pub struct CreateComment<'info> {
             random_hash.as_ref(),
         ],
         bump,
-        payer = authority,
+        payer = payer,
         space = Post::LEN
     )]
     pub post: Account<'info, Post>,
@@ -165,7 +168,6 @@ pub struct CreateComment<'info> {
         authority = profile.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
-    #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
     pub system_program: Program<'info, System>,

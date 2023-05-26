@@ -10,6 +10,9 @@ use gpl_nameservice::validate as validate_screen_name;
 #[derive(Accounts)]
 #[instruction(random_hash: [u8; 32], metadata_uri: String)]
 pub struct CreateProfile<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    // The account that will be initialized as a Profile
     #[account(
         init,
         seeds = [
@@ -17,7 +20,7 @@ pub struct CreateProfile<'info> {
             random_hash.as_ref(),
         ],
         bump,
-        payer = authority,
+        payer = payer,
         space = Profile::LEN
     )]
     pub profile: Account<'info, Profile>,
@@ -27,7 +30,6 @@ pub struct CreateProfile<'info> {
     )]
     pub screen_name: AccountInfo<'info>,
 
-    #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
     pub system_program: Program<'info, System>,

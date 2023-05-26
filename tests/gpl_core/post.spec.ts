@@ -15,6 +15,7 @@ const provider = anchor.getProvider();
 describe("Post", async () => {
   let profilePDA: anchor.web3.PublicKey;
   let postPDA: anchor.web3.PublicKey;
+  let feePayer: anchor.web3.Keypair;
 
   before(async () => {
     const randomHash = randombytes(32);
@@ -29,6 +30,10 @@ describe("Post", async () => {
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();
+
+    // Create fee payer keypair
+    feePayer = anchor.web3.Keypair.generate();
+    await airdrop(feePayer.publicKey);
   });
 
   it("should create a post", async () => {
@@ -76,6 +81,25 @@ describe("Post", async () => {
     }
   });
 
+  it("should create a post when a seperate fee payer is specified", async () => {
+    const randomHash = randombytes(32);
+    const metadataUri = "This is a test post";
+    const createPost = program.methods
+      .createPost(metadataUri, randomHash)
+      .accounts({
+        payer: feePayer.publicKey,
+        user: userPDA,
+        profile: profilePDA,
+        sessionToken: null,
+      });
+    const pubKeys = await createPost.pubkeys();
+    postPDA = pubKeys.post as anchor.web3.PublicKey;
+    await createPost.signers([feePayer]).rpc();
+    const postAccount = await program.account.post.fetch(postPDA);
+    expect(postAccount.metadataUri).is.equal(metadataUri);
+    expect(postAccount.profile.toString()).is.equal(profilePDA.toString());
+  });
+
   describe("Post with session token", async () => {
     let rpcConnection: anchor.web3.Connection;
     let sessionToken: anchor.web3.PublicKey;
@@ -109,7 +133,11 @@ describe("Post", async () => {
       // Create a profile
       const testProfile = program.methods
         .createProfile(randomHash, profileMetdataUri)
-        .accounts({ authority: randomUser.publicKey, screenName });
+        .accounts({
+          payer: randomUser.publicKey,
+          authority: randomUser.publicKey,
+          screenName,
+        });
       const testProfilePubKeys = await testProfile.pubkeys();
       randomProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
       const testProfileTx = await testProfile.transaction();
