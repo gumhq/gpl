@@ -113,6 +113,11 @@ pub mod gpl_core {
         create_issuer_handler(ctx)
     }
 
+    // verify an issuer
+    pub fn verify_issuer(ctx: Context<VerifyIssuer>) -> Result<()> {
+        verify_issuer_handler(ctx)
+    }
+
     // delete an issuer
     pub fn delete_issuer(ctx: Context<DeleteIssuer>) -> Result<()> {
         delete_issuer_handler(ctx)
