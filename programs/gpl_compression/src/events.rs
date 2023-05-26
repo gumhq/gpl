@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use gpl_core::state::ReactionType;
 
 #[event]
 pub struct CompressedPostNew {
