@@ -11,12 +11,11 @@ anchor.setProvider(anchor.AnchorProvider.env());
 describe("Profile", async () => {
   let profilePDA: anchor.web3.PublicKey;
   let gumTld: anchor.web3.PublicKey;
+  let feePayer: anchor.web3.Keypair;
 
   before(async () => {
     // Create gum tld
     gumTld = await createGumTld();
-    let feePayer: anchor.web3.Keypair;
-    // Create fee payer keypair
     feePayer = anchor.web3.Keypair.generate();
     await airdrop(feePayer.publicKey);
   });
@@ -24,7 +23,6 @@ describe("Profile", async () => {
   it("should create a profile", async () => {
     const profileMetdataUri = "https://example.com";
     const screenName = await createGumDomain(gumTld, "foobar123123");
-    // Create a user
     const randomHash = randombytes(32);
 
     const tx = program.methods
@@ -53,10 +51,12 @@ describe("Profile", async () => {
   });
 
   it("should create a profile when a seperate fee payer is specified", async () => {
+    const randomHash = randombytes(32);
     const profileMetdataUri = "https://example.com";
+    const screenName = await createGumDomain(gumTld, "dfgdsfgsdfgsrd");
     const tx = program.methods
-      .createProfile("Personal", profileMetdataUri)
-      .accounts({ payer: feePayer.publicKey });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ payer: feePayer.publicKey, screenName });
     const pubKeys = await tx.pubkeys();
     profilePDA = pubKeys.profile as anchor.web3.PublicKey;
     await tx.signers([feePayer]).rpc();

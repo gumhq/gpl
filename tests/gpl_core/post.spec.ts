@@ -88,7 +88,6 @@ describe("Post", async () => {
       .createPost(metadataUri, randomHash)
       .accounts({
         payer: feePayer.publicKey,
-        user: userPDA,
         profile: profilePDA,
         sessionToken: null,
       });
