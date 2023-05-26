@@ -13,7 +13,7 @@ use anchor_lang::prelude::*;
 pub struct CreateBadge<'info> {
     #[account(
         init,
-        seeds = [Badge::SEED_PREFIX.as_bytes(), issuer.key().as_ref(), holder.key().as_ref()],
+        seeds = [Badge::SEED_PREFIX.as_bytes(), issuer.key().as_ref(), schema.key().as_ref(), holder.key().as_ref()],
         bump,
         payer = authority,
         space = Badge::LEN
@@ -36,6 +36,12 @@ pub struct CreateBadge<'info> {
     )]
     pub holder: Account<'info, Profile>,
 
+    #[account(
+        seeds = [Schema::SEED_PREFIX.as_bytes(), schema.authority.key().as_ref()],
+        bump,
+    )]
+    pub schema: Account<'info, Schema>,
+
     /// CHECK the update_authority of the badge issuer
     pub update_authority: Option<UncheckedAccount<'info>>,
 
@@ -53,6 +59,7 @@ pub fn create_badge_handler(ctx: Context<CreateBadge>, metadata_uri: String) -> 
     badge.set_inner(Badge {
         issuer: ctx.accounts.issuer.key(),
         holder: ctx.accounts.holder.key(),
+        schema: ctx.accounts.schema.key(),
         metadata_uri,
         // If an update_authority is not provided, use the issuer ie current signer as the update_authority
         update_authority: ctx
@@ -72,9 +79,10 @@ pub fn create_badge_handler(ctx: Context<CreateBadge>, metadata_uri: String) -> 
 pub struct UpdateBadge<'info> {
     #[account(
         mut,
-        seeds = [Badge::SEED_PREFIX.as_bytes(), issuer.key().as_ref(), badge.holder.key().as_ref()],
+        seeds = [Badge::SEED_PREFIX.as_bytes(), issuer.key().as_ref(), schema.key().as_ref(), badge.holder.key().as_ref()],
         bump,
-        has_one = issuer
+        has_one = issuer,
+        has_one = schema
     )]
     pub badge: Account<'info, Badge>,
     #[account(
@@ -83,6 +91,13 @@ pub struct UpdateBadge<'info> {
         constraint = issuer.verified @ GumError::UnverifiedIssuer
     )]
     pub issuer: Account<'info, Issuer>,
+
+    #[account(
+        seeds = [Schema::SEED_PREFIX.as_bytes(), schema.authority.key().as_ref()],
+        bump,
+    )]
+    pub schema: Account<'info, Schema>,
+
     #[account(
         // The badge can be updated by the issuer or update authority set in the badge
         constraint = badge.update_authority == signer.key() || issuer.authority == signer.key() @ProgramError::MissingRequiredSignature
@@ -107,10 +122,11 @@ pub fn update_badge_handler(ctx: Context<UpdateBadge>, metadata_uri: String) -> 
 pub struct BurnBadge<'info> {
     #[account(
         mut,
-        seeds = [Badge::SEED_PREFIX.as_bytes(), issuer.key().as_ref(), holder.key().as_ref()],
+        seeds = [Badge::SEED_PREFIX.as_bytes(), issuer.key().as_ref(), schema.key().as_ref(), holder.key().as_ref()],
         bump,
         has_one = issuer,
         has_one = holder,
+        has_one = schema,
         close = signer
     )]
     pub badge: Account<'info, Badge>,
@@ -130,6 +146,13 @@ pub struct BurnBadge<'info> {
         constraint = issuer.verified @ GumError::UnverifiedIssuer
     )]
     pub issuer: Account<'info, Issuer>,
+
+    #[account(
+        seeds = [Schema::SEED_PREFIX.as_bytes(), schema.authority.key().as_ref()],
+        bump,
+    )]
+    pub schema: Account<'info, Schema>,
+
     #[account(
         mut,
         constraint = signer.key() == holder.authority.key() || signer.key() == issuer.key() @ProgramError::MissingRequiredSignature
@@ -155,14 +178,6 @@ pub struct CreateSchema<'info> {
     )]
     pub schema: Account<'info, Schema>,
 
-    #[account(
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
-        bump,
-        constraint = issuer.verified @ GumError::UnverifiedIssuer,
-        has_one = authority
-    )]
-    pub issuer: Account<'info, Issuer>,
-
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -174,12 +189,19 @@ pub fn create_schema_handler(
     metadata_uri: String,
     random_hash: [u8; 32],
 ) -> Result<()> {
+    require_eq!(
+        ctx.accounts.authority.key(),
+        // FIXME: Move this to constant byte and importantly use a different key before deploying.
+        // This is a quick hack to test the patch.
+        Pubkey::from_str("Bi2ZL1UijCXwtNYi132NyMDRnzVxpuAVcgsqVuUgee5A").unwrap(),
+        GumError::UnauthorizedSigner
+    );
     require!(metadata_uri.len() <= MAX_LEN_URI, GumError::URITooLong);
 
     let schema = &mut ctx.accounts.schema;
 
     schema.set_inner(Schema {
-        issuer: ctx.accounts.issuer.key(),
+        authority: ctx.accounts.authority.key(),
         metadata_uri,
         random_hash,
     });
@@ -195,23 +217,22 @@ pub struct UpdateSchema<'info> {
         mut,
         seeds = [Schema::SEED_PREFIX.as_bytes(), schema.random_hash.as_ref()],
         bump,
-        has_one = issuer
-    )]
-    pub schema: Account<'info, Schema>,
-
-    #[account(
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
-        bump,
-        constraint = issuer.verified @ GumError::UnverifiedIssuer,
         has_one = authority
     )]
-    pub issuer: Account<'info, Issuer>,
+    pub schema: Account<'info, Schema>,
 
     pub authority: Signer<'info>,
 }
 
 // Handler to update a schema
 pub fn update_schema_handler(ctx: Context<UpdateSchema>, metadata_uri: String) -> Result<()> {
+    require_eq!(
+        ctx.accounts.authority.key(),
+        // FIXME: Move this to constant byte and importantly use a different key before deploying.
+        // This is a quick hack to test the patch.
+        Pubkey::from_str("Bi2ZL1UijCXwtNYi132NyMDRnzVxpuAVcgsqVuUgee5A").unwrap(),
+        GumError::UnauthorizedSigner
+    );
     require!(metadata_uri.len() <= MAX_LEN_URI, GumError::URITooLong);
 
     let schema = &mut ctx.accounts.schema;
@@ -228,24 +249,23 @@ pub struct DeleteSchema<'info> {
         mut,
         seeds = [Schema::SEED_PREFIX.as_bytes(), schema.random_hash.as_ref()],
         bump,
-        has_one = issuer,
+        has_one = authority,
         close = authority
     )]
     pub schema: Account<'info, Schema>,
-
-    #[account(
-        seeds = [Issuer::SEED_PREFIX.as_bytes(), authority.key().as_ref()],
-        bump,
-        constraint = issuer.verified @ GumError::UnverifiedIssuer,
-        has_one = authority,
-    )]
-    pub issuer: Account<'info, Issuer>,
 
     pub authority: Signer<'info>,
 }
 
 // Handler to delete a schema
-pub fn delete_schema_handler(_: Context<DeleteSchema>) -> Result<()> {
+pub fn delete_schema_handler(ctx: Context<DeleteSchema>) -> Result<()> {
+    require_eq!(
+        ctx.accounts.authority.key(),
+        // FIXME: Move this to constant byte and importantly use a different key before deploying.
+        // This is a quick hack to test the patch.
+        Pubkey::from_str("Bi2ZL1UijCXwtNYi132NyMDRnzVxpuAVcgsqVuUgee5A").unwrap(),
+        GumError::UnauthorizedSigner
+    );
     Ok(())
 }
 

@@ -8,6 +8,7 @@ pub struct Badge {
     // Profile of the user who earned the badge
     pub holder: Pubkey,
     pub update_authority: Pubkey,
+    pub schema: Pubkey,
     pub metadata_uri: String,
 }
 
@@ -31,7 +32,7 @@ impl Issuer {
 
 #[account]
 pub struct Schema {
-    pub issuer: Pubkey,
+    pub authority: Pubkey,
     pub metadata_uri: String,
     pub random_hash: [u8; 32],
 }
