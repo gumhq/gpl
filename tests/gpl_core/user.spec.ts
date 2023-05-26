@@ -15,10 +15,18 @@ describe("User", async () => {
   let connection: anchor.web3.Connection;
   let userPDA: anchor.web3.PublicKey;
   let randomUser: anchor.web3.Keypair;
+  let feePayer: anchor.web3.Keypair;
 
   before(async () => {
     randomUser = anchor.web3.Keypair.generate();
     await airdrop(randomUser.publicKey);
+    connection = new anchor.web3.Connection(
+      "http://localhost:8899",
+      "confirmed"
+    );
+
+    feePayer = anchor.web3.Keypair.generate();
+    await airdrop(feePayer.publicKey);
     connection = new anchor.web3.Connection(
       "http://localhost:8899",
       "confirmed"
@@ -76,5 +84,22 @@ describe("User", async () => {
         `Account does not exist or has no data ${randomUserPDA.toString()}`
       );
     }
+  });
+
+  it("should create a user when a seperate fee payer is specified", async () => {
+    const randomHash = randombytes(32);
+    const createUser = program.methods
+      .createUser(randomHash)
+      .accounts({
+        payer: feePayer.publicKey,
+        authority: user.publicKey,
+      });
+    const pubKeys = await createUser.pubkeys();
+    userPDA = pubKeys.user as anchor.web3.PublicKey;
+    await createUser.signers([feePayer]).rpc();
+    const userAccount = await program.account.user.fetch(userPDA);
+    expect(userAccount.authority.toString()).is.equal(
+      user.publicKey.toString()
+    );
   });
 });

@@ -2,6 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import randombytes from "randombytes";
 import { expect } from "chai";
 import { GplCore } from "../../target/types/gpl_core";
+import { airdrop } from "../utils";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 
@@ -11,6 +12,7 @@ describe("Profile Metadata", async () => {
   let userPDA: anchor.web3.PublicKey;
   let profilePDA: anchor.web3.PublicKey;
   let profileMetadataPDA: anchor.web3.PublicKey;
+  let feePayer: anchor.web3.Keypair;
 
   before(async () => {
     // Create a user
@@ -27,6 +29,10 @@ describe("Profile Metadata", async () => {
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();
+
+    // Create fee payer keypair
+    feePayer = anchor.web3.Keypair.generate();
+    await airdrop(feePayer.publicKey);
   });
 
   it("should create a profile metadata", async () => {
@@ -82,5 +88,23 @@ describe("Profile Metadata", async () => {
         `Account does not exist or has no data ${profileMetadataPDA.toString()}`
       );
     }
+  });
+
+  it("should create a profile metadata when a seperate fee payer is specified", async () => {
+    const metadataUri = "https://example.com";
+    const profileMetadata = program.methods
+      .createProfileMetadata(metadataUri)
+      .accounts({ payer: feePayer.publicKey, user: userPDA, profile: profilePDA });
+      const profileMetadataPubKeys = await profileMetadata.pubkeys();
+      profileMetadataPDA =
+        profileMetadataPubKeys.profileMetadata as anchor.web3.PublicKey;
+    await profileMetadata.signers([feePayer]).rpc();
+    const profileMetadataAccount = await program.account.profileMetadata.fetch(
+      profileMetadataPDA
+    );
+    expect(profileMetadataAccount.metadataUri).is.equal(metadataUri);
+    expect(profileMetadataAccount.profile.toString()).is.equal(
+      profilePDA.toString()
+    );
   });
 });

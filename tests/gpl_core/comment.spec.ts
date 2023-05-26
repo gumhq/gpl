@@ -1,6 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import randombytes from "randombytes";
 import { expect } from "chai";
+import { sendAndConfirmTransaction } from "@solana/web3.js";
 import { GplCore } from "../../target/types/gpl_core";
 import { new_session, airdrop } from "../utils";
 
@@ -15,6 +16,7 @@ describe("Comment", async () => {
   let profilePDA: anchor.web3.PublicKey;
   let postPDA: anchor.web3.PublicKey;
   let testUserKeypair: anchor.web3.Keypair;
+  let feePayer: anchor.web3.Keypair;
   let testUserPDA: anchor.web3.PublicKey;
   let fromProfilePDA: anchor.web3.PublicKey;
 
@@ -47,6 +49,10 @@ describe("Comment", async () => {
     // Create a test user keypair
     testUserKeypair = anchor.web3.Keypair.generate();
     await airdrop(testUserKeypair.publicKey);
+
+    // Create fee payer keypair
+    feePayer = anchor.web3.Keypair.generate();
+    await airdrop(feePayer.publicKey);
 
     // Create a test user pda
     const testUserRandomhash = randombytes(32);
@@ -82,6 +88,27 @@ describe("Comment", async () => {
     const commentPubkeys = await commentTx.pubkeys();
     const commentPDA = commentPubkeys.post as anchor.web3.PublicKey;
     await commentTx.signers([testUserKeypair]).rpc();
+    const commentAccount = await program.account.post.fetch(commentPDA);
+    expect(commentAccount.profile.toString()).is.equal(
+      fromProfilePDA.toString()
+    );
+  });
+
+  it("should create a comment when a seperate fee payer is specified", async () => {
+    const createComment = program.methods
+      // @ts-ignore
+      .createComment("This is a test comment", randombytes(32))
+      .accounts({
+        payer: feePayer.publicKey,
+        replyTo: postPDA,
+        profile: fromProfilePDA,
+        user: testUserPDA,
+        authority: testUserKeypair.publicKey,
+        sessionToken: null,
+      });
+    const pubKeys = await createComment.pubkeys();
+    const commentPDA = pubKeys.post as anchor.web3.PublicKey;
+    await createComment.signers([feePayer, testUserKeypair]).rpc();
     const commentAccount = await program.account.post.fetch(commentPDA);
     expect(commentAccount.profile.toString()).is.equal(
       fromProfilePDA.toString()

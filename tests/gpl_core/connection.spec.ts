@@ -14,6 +14,7 @@ anchor.setProvider(anchor.AnchorProvider.env());
 describe("Connection", async () => {
   let rpcConnection: anchor.web3.Connection;
   let testUser: anchor.web3.Keypair;
+  let feePayer: anchor.web3.Keypair;
   let testUserWallet: NodeWallet;
   let userPDA: anchor.web3.PublicKey;
   let testUserPDA: anchor.web3.PublicKey;
@@ -46,10 +47,14 @@ describe("Connection", async () => {
     testUserWallet = new NodeWallet(testUser);
     await airdrop(testUser.publicKey);
 
+    // Create a feePayer
+    feePayer = anchor.web3.Keypair.generate();
+    await airdrop(feePayer.publicKey);
+
     const randomTestHash = randombytes(32);
     const createTestUser = program.methods
       .createUser(randomTestHash)
-      .accounts({ authority: testUser.publicKey });
+      .accounts({ payer: testUser.publicKey, authority: testUser.publicKey });
     const testUserPubKeys = await createTestUser.pubkeys();
     testUserPDA = testUserPubKeys.user as anchor.web3.PublicKey;
     const testUserTx = await createTestUser.transaction();
@@ -67,7 +72,7 @@ describe("Connection", async () => {
     // Create a testProfile
     const testProfile = program.methods
       .createProfile("Personal")
-      .accounts({ user: testUserPDA, authority: testUser.publicKey });
+      .accounts({ payer: testUser.publicKey, user: testUserPDA, authority: testUser.publicKey });
     const testProfilePubKeys = await testProfile.pubkeys();
     testProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
     const testProfileTx = await testProfile.transaction();
@@ -125,6 +130,42 @@ describe("Connection", async () => {
         `Account does not exist or has no data ${connectionPDA.toString()}`
       );
     }
+  });
+
+  it("should create a connection when a seperate fee payer is specified", async () => {
+    const createConnection = program.methods
+      .createConnection()
+      .accounts({
+        payer: feePayer.publicKey,
+        fromProfile: profilePDA,
+        toProfile: testProfilePDA,
+        user: userPDA,
+        sessionToken: null,
+      });
+    const pubKeys = await createConnection.pubkeys();
+    connectionPDA = pubKeys.connection as anchor.web3.PublicKey;
+    await createConnection.signers([feePayer]).rpc();
+
+    const connectionAccount = await program.account.connection.fetch(
+      connectionPDA
+    );
+    expect(connectionAccount.fromProfile.toBase58()).to.equal(
+      profilePDA.toBase58()
+    );
+    expect(connectionAccount.toProfile.toBase58()).to.equal(
+      testProfilePDA.toBase58()
+    );
+
+    // Cleanup for next tests
+    await program.methods.deleteConnection().accounts({
+      fromProfile: profilePDA,
+      toProfile: testProfilePDA,
+      connection: connectionPDA,
+      user: userPDA,
+      sessionToken: null,
+      // @ts-ignore
+      refundReceiver: provider.wallet.publicKey,
+    }).rpc();
   });
 
   describe("Connection with session token", async () => {

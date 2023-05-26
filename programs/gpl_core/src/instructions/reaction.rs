@@ -13,6 +13,8 @@ use gpl_session::{session_auth_or, Session, SessionError, SessionToken};
 #[derive(Accounts, Session)]
 #[instruction(reaction_type: String)]
 pub struct CreateReaction<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
     // The account that will be initialized as a Reaction
     #[account(
         init,
@@ -23,7 +25,7 @@ pub struct CreateReaction<'info> {
             from_profile.to_account_info().key.as_ref(),
         ],
         bump,
-        payer = authority,
+        payer = payer,
         space = Reaction::LEN
     )]
     pub reaction: Account<'info, Reaction>,
@@ -60,7 +62,6 @@ pub struct CreateReaction<'info> {
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
-    #[account(mut)]
     pub authority: Signer<'info>,
 
     // The system program

@@ -11,6 +11,8 @@ use crate::constants::*;
 #[derive(Accounts)]
 #[instruction(metadata_uri: String)]
 pub struct CreateProfileMetadata<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
     // The account that will be initialized as a ProfileMetadata
     #[account(
         init,
@@ -19,7 +21,7 @@ pub struct CreateProfileMetadata<'info> {
             profile.to_account_info().key.as_ref(),
         ],
         bump,
-        payer = authority,
+        payer = payer,
         space = ProfileMetadata::LEN
     )]
     pub profile_metadata: Account<'info, ProfileMetadata>,
@@ -42,7 +44,6 @@ pub struct CreateProfileMetadata<'info> {
         has_one = authority,
     )]
     pub user: Account<'info, User>,
-    #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
     pub system_program: Program<'info, System>,

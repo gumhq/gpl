@@ -11,6 +11,8 @@ use crate::events::{ConnectionDeleted, ConnectionNew};
 // Create a connection between two profiles, ie from_profile -> to_profile
 #[derive(Accounts, Session)]
 pub struct CreateConnection<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
     // The account that will be initialized as a Connection
     #[account(
         init,
@@ -20,7 +22,7 @@ pub struct CreateConnection<'info> {
             to_profile.key().as_ref()
         ],
         bump,
-        payer = authority,
+        payer = payer,
         space = Connection::LEN
     )]
     pub connection: Account<'info, Connection>,
@@ -58,7 +60,6 @@ pub struct CreateConnection<'info> {
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
-    #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
     pub system_program: Program<'info, System>,

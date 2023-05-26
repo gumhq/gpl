@@ -10,6 +10,8 @@ use crate::events::{ProfileDeleted, ProfileNew};
 #[derive(Accounts)]
 #[instruction(namespace: String)]
 pub struct CreateProfile<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
     // The account that will be initialized as a Profile
     #[account(
         init,
@@ -19,7 +21,7 @@ pub struct CreateProfile<'info> {
             user.to_account_info().key.as_ref()
         ],
         bump,
-        payer = authority,
+        payer = payer,
         space = Profile::LEN
     )]
     pub profile: Account<'info, Profile>,
@@ -32,7 +34,6 @@ pub struct CreateProfile<'info> {
         has_one = authority,
     )]
     pub user: Account<'info, User>,
-    #[account(mut)]
     pub authority: Signer<'info>,
     // The system program
     pub system_program: Program<'info, System>,
