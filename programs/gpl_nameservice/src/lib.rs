@@ -5,7 +5,7 @@ mod nameservice;
 
 pub use nameservice::*;
 
-declare_id!("7LEuQxAEegasvBSq7dDrMregc3mrDtTyHiytNK9pU68u");
+declare_id!("5kWEYrdyryq3jGP5sUcKwTySzxr3dHzWFBVA3vkt6Nj5");
 
 #[program]
 pub mod gpl_nameservice {

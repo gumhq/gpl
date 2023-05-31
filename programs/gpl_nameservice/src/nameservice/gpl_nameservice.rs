@@ -7,7 +7,7 @@ impl NameServiceParser for GplNameService {
     type ServiceName = NameRecord;
 
     fn id_str() -> &'static str {
-        "7LEuQxAEegasvBSq7dDrMregc3mrDtTyHiytNK9pU68u"
+        "5kWEYrdyryq3jGP5sUcKwTySzxr3dHzWFBVA3vkt6Nj5"
     }
 
     fn unpack(record: &AccountInfo) -> Result<NameRecord> {
