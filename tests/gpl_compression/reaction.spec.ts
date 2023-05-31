@@ -35,7 +35,6 @@ describe("Reaction Compression", async () => {
 
   let profilePDA: PublicKey;
   let postPDA: PublicKey;
-  let reactionPDA: PublicKey;
   let emoji = "👍";
 
   beforeEach(async () => {
@@ -130,8 +129,7 @@ describe("Reaction Compression", async () => {
     const reaction = {
       fromProfile: profilePDA,
       toPost: postPDA,
-      // Weird anchor trick for passing enums
-      reactionType: { emoji: { emoji } },
+      reactionType: emoji,
     };
 
     const reactionLeaf = await to_leaf(
@@ -187,8 +185,7 @@ describe("Reaction Compression", async () => {
     const reaction = {
       fromProfile: profilePDA,
       toPost: postPDA,
-      // Weird anchor trick for passing enums
-      reactionType: { emoji: { emoji } },
+      reactionType: emoji,
     };
 
     const reactionLeaf = await to_leaf(

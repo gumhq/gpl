@@ -5,10 +5,9 @@ pub enum GumError {
     URITooLong,
     CannotConnectToSelf,
     UnauthorizedSigner,
-    InvalidEmoji,
-    CustomTagTooLong,
     UnverifiedIssuer,
     InvalidSignerToVerify,
+    ReactionTypeTooLong,
 }
 
 #[error_code]

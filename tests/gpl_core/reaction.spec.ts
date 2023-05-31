@@ -11,7 +11,6 @@ anchor.setProvider(anchor.AnchorProvider.env());
 const provider = anchor.getProvider();
 
 describe("Reaction", async () => {
-  let userPDA: anchor.web3.PublicKey;
   let profilePDA: anchor.web3.PublicKey;
   let postPDA: anchor.web3.PublicKey;
   let reactionPDA: anchor.web3.PublicKey;
@@ -57,7 +56,6 @@ describe("Reaction", async () => {
     const reactionPubKeys = await reaction.pubkeys();
     reactionPDA = reactionPubKeys.reaction as anchor.web3.PublicKey;
     await reaction.rpc();
-
     const reactionAccount = await program.account.reaction.fetch(reactionPDA);
     expect(reactionAccount.toPost.toBase58()).to.equal(postPDA.toBase58());
     expect(reactionAccount.fromProfile.toBase58()).to.equal(
@@ -86,7 +84,7 @@ describe("Reaction", async () => {
   });
 
   it("should create a reaction when a seperate fee payer is specified", async () => {
-    const reaction = program.methods.createReaction("Haha").accounts({
+    const reaction = program.methods.createReaction(emoji).accounts({
       payer: feePayer.publicKey,
       toPost: postPDA,
       fromProfile: profilePDA,

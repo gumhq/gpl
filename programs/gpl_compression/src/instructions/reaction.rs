@@ -1,10 +1,7 @@
 use anchor_lang::Discriminator;
-use std::convert::AsRef;
-use std::str::FromStr;
 
 use gpl_core::state::Profile;
 use gpl_core::state::Reaction;
-use gpl_core::state::ReactionType;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::keccak::hashv;
@@ -70,7 +67,7 @@ pub fn create_compressed_reaction_handler<'info>(
     post_leaf: [u8; 32],
     post_index: u32,
 ) -> Result<()> {
-    let reaction_type = ReactionType::from_str(&reaction_type)?;
+    Reaction::validate_reaction_type(&reaction_type)?;
 
     let from_profile = &ctx.accounts.from_profile;
 
@@ -133,7 +130,7 @@ pub fn create_compressed_reaction_handler<'info>(
     emit!(CompressedReactionNew {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: reaction_type.to_string(),
+        reaction_type,
         reaction_id,
         reaction_bump,
         asset_id,
@@ -183,7 +180,7 @@ pub fn delete_compressed_reaction_handler<'info>(
     root: [u8; 32],
     index: u32,
 ) -> Result<()> {
-    let reaction_type = ReactionType::from_str(&reaction_type)?;
+    Reaction::validate_reaction_type(&reaction_type)?;
 
     let from_profile = &ctx.accounts.from_profile;
     let reaction_seeds = [
@@ -236,7 +233,7 @@ pub fn delete_compressed_reaction_handler<'info>(
     emit!(CompressedReactionDeleted {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: reaction_type.to_string(),
+        reaction_type,
         reaction_id,
         reaction_bump,
         asset_id,

@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use solana_security_txt::security_txt;
 
 pub mod constants;
 pub mod errors;
@@ -12,7 +11,7 @@ use instructions::*;
 declare_id!("6MhUAJtKdJx3RDCffUsJsQm8xy9YhhywjEmMYrxRc5j6");
 
 #[cfg(not(feature = "no-entrypoint"))]
-security_txt! {
+solana_security_txt::security_txt! {
     name: "gpl_core",
     project_url: "https://gum.fun",
     contacts: "email:hello@gum.fun,twitter:@gumisfunn",
@@ -85,6 +84,7 @@ pub mod gpl_core {
 
     // create a reaction account with reaction type
     pub fn create_reaction(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
+        // By default, reactions are not custom
         create_reaction_handler(ctx, reaction_type)
     }
 

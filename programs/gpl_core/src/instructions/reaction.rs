@@ -1,6 +1,5 @@
 use crate::errors::GumError;
-use crate::state::{Post, Profile, Reaction, ReactionType};
-use std::str::FromStr;
+use crate::state::{Post, Profile, Reaction};
 
 use anchor_lang::prelude::*;
 
@@ -19,7 +18,7 @@ pub struct CreateReaction<'info> {
         init,
         seeds = [
             REACTION_PREFIX_SEED.as_bytes(),
-            reaction_type.as_ref(),
+            reaction_type.as_bytes(),
             to_post.to_account_info().key.as_ref(),
             from_profile.to_account_info().key.as_ref(),
         ],
@@ -56,7 +55,7 @@ pub struct CreateReaction<'info> {
     GumError::UnauthorizedSigner
 )]
 pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
-    let reaction_type = ReactionType::from_str(&reaction_type)?;
+    Reaction::validate_reaction_type(&reaction_type)?;
     let reaction = &mut ctx.accounts.reaction;
     reaction.reaction_type = reaction_type;
     reaction.to_post = *ctx.accounts.to_post.to_account_info().key;
@@ -65,7 +64,7 @@ pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: Stri
     // emit a new reaction event
     emit!(ReactionNew {
         reaction: *reaction.to_account_info().key,
-        reaction_type: reaction.reaction_type.to_string(),
+        reaction_type: reaction.reaction_type.clone(),
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
