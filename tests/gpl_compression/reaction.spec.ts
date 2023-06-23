@@ -6,6 +6,8 @@ import {
   gpl_compression,
   setupTree,
   to_leaf,
+  createGumTld,
+  createGumDomain,
 } from "../utils/index";
 
 import {
@@ -20,6 +22,8 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { expect } from "chai";
 import randomBytes from "randombytes";
 
+import { faker } from "@faker-js/faker";
+
 anchor.setProvider(anchor.AnchorProvider.env());
 const rpcConnection = anchor.getProvider().connection;
 
@@ -29,10 +33,9 @@ describe("Reaction Compression", async () => {
   let treeConfigPDA: PublicKey;
   let offChainTree: MerkleTree;
 
-  let userPDA: PublicKey;
   let profilePDA: PublicKey;
   let postPDA: PublicKey;
-  let reactionPDA: PublicKey;
+  let emoji = "👍";
 
   beforeEach(async () => {
     // Setup a new keypair and airdrop some SOL
@@ -51,18 +54,18 @@ describe("Reaction Compression", async () => {
     offChainTree = treeResult.offChainTree;
 
     const randomHash = randomBytes(32);
-    // @ts-ignore
-    const userTx = gpl_core.methods.createUser(randomHash).accounts({
-      authority: payer.publicKey,
-    });
-    const userPubKeys = await userTx.pubkeys();
-    userPDA = userPubKeys.user as anchor.web3.PublicKey;
-    await userTx.signers([payer]).rpc();
 
     // Create a profile
+    const profileMetdataUri = "https://example.com";
+    const gumTld = await createGumTld();
+    const screenName = await createGumDomain(
+      gumTld,
+      faker.internet.userName(),
+      payer
+    );
     const profileTx = gpl_core.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA, authority: payer.publicKey });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ authority: payer.publicKey, screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.signers([payer]).rpc();
@@ -74,7 +77,6 @@ describe("Reaction Compression", async () => {
       // @ts-ignore
       .createPost(metadataUri, postRandomHash)
       .accounts({
-        user: userPDA,
         profile: profilePDA,
         authority: payer.publicKey,
         sessionToken: null,
@@ -91,13 +93,12 @@ describe("Reaction Compression", async () => {
       .createCompressedReaction(
         //@ts-ignore
         postPDA,
-        "Haha",
+        emoji,
         postProof.root,
         postProof.leaf,
         0
       )
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,
@@ -120,7 +121,7 @@ describe("Reaction Compression", async () => {
 
     const reactionSeeds = [
       Buffer.from("reaction"),
-      Buffer.from("Haha"),
+      Buffer.from(emoji),
       postPDA.toBuffer(),
       profilePDA.toBuffer(),
     ];
@@ -128,8 +129,7 @@ describe("Reaction Compression", async () => {
     const reaction = {
       fromProfile: profilePDA,
       toPost: postPDA,
-      // Weird anchor trick for passing enums
-      reactionType: { haha: {} },
+      reactionType: emoji,
     };
 
     const reactionLeaf = await to_leaf(
@@ -149,13 +149,12 @@ describe("Reaction Compression", async () => {
       .createCompressedReaction(
         //@ts-ignore
         postPDA,
-        "Haha",
+        emoji,
         postProof.root,
         postProof.leaf,
         index
       )
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,
@@ -178,7 +177,7 @@ describe("Reaction Compression", async () => {
 
     const reactionSeeds = [
       Buffer.from("reaction"),
-      Buffer.from("Haha"),
+      Buffer.from(emoji),
       postPDA.toBuffer(),
       profilePDA.toBuffer(),
     ];
@@ -186,8 +185,7 @@ describe("Reaction Compression", async () => {
     const reaction = {
       fromProfile: profilePDA,
       toPost: postPDA,
-      // Weird anchor trick for passing enums
-      reactionType: { haha: {} },
+      reactionType: emoji,
     };
 
     const reactionLeaf = await to_leaf(
@@ -206,9 +204,8 @@ describe("Reaction Compression", async () => {
 
     await gpl_compression.methods
       // @ts-ignore
-      .deleteCompressedReaction(postPDA, "Haha", proof.root, index)
+      .deleteCompressedReaction(postPDA, emoji, proof.root, index)
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,

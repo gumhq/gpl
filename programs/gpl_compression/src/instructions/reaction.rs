@@ -1,10 +1,7 @@
 use anchor_lang::Discriminator;
-use std::convert::AsRef;
-use std::str::FromStr;
 
+use gpl_core::state::Profile;
 use gpl_core::state::Reaction;
-use gpl_core::state::ReactionType;
-use gpl_core::state::{Profile, User};
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::keccak::hashv;
@@ -30,25 +27,13 @@ pub struct CreateCompressedReaction<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub from_profile: Account<'info, Profile>,
-
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub from_profile: Account<'info, Profile>,
 
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
@@ -82,6 +67,8 @@ pub fn create_compressed_reaction_handler<'info>(
     post_leaf: [u8; 32],
     post_index: u32,
 ) -> Result<()> {
+    Reaction::validate_reaction_type(&reaction_type)?;
+
     let from_profile = &ctx.accounts.from_profile;
 
     // Check if the to_post exists
@@ -101,7 +88,7 @@ pub fn create_compressed_reaction_handler<'info>(
 
     let reaction_seeds = [
         REACTION_PREFIX_SEED.as_bytes(),
-        reaction_type.as_bytes(),
+        reaction_type.as_ref(),
         to_post.as_ref(),
         from_profile.to_account_info().key.as_ref(),
     ];
@@ -116,7 +103,7 @@ pub fn create_compressed_reaction_handler<'info>(
     let reaction = Reaction {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: ReactionType::from_str(&reaction_type).unwrap(),
+        reaction_type: reaction_type.clone(),
     };
 
     let leaf = LeafSchema {
@@ -143,12 +130,11 @@ pub fn create_compressed_reaction_handler<'info>(
     emit!(CompressedReactionNew {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: reaction_type.clone(),
+        reaction_type,
         reaction_id,
         reaction_bump,
         asset_id,
         index: 0, //TODO: get the index
-        user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
     });
 
@@ -162,25 +148,13 @@ pub struct DeleteCompressedReaction<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub from_profile: Account<'info, Profile>,
-
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub from_profile: Account<'info, Profile>,
 
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
@@ -206,10 +180,12 @@ pub fn delete_compressed_reaction_handler<'info>(
     root: [u8; 32],
     index: u32,
 ) -> Result<()> {
+    Reaction::validate_reaction_type(&reaction_type)?;
+
     let from_profile = &ctx.accounts.from_profile;
     let reaction_seeds = [
         REACTION_PREFIX_SEED.as_bytes(),
-        reaction_type.as_bytes(),
+        reaction_type.as_ref(),
         to_post.as_ref(),
         from_profile.to_account_info().key.as_ref(),
     ];
@@ -224,7 +200,7 @@ pub fn delete_compressed_reaction_handler<'info>(
     let old_reaction = Reaction {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: ReactionType::from_str(&reaction_type).unwrap(),
+        reaction_type: reaction_type.clone(),
     };
 
     let old_leaf = LeafSchema {
@@ -257,12 +233,11 @@ pub fn delete_compressed_reaction_handler<'info>(
     emit!(CompressedReactionDeleted {
         from_profile: *from_profile.to_account_info().key,
         to_post,
-        reaction_type: reaction_type.clone(),
+        reaction_type,
         reaction_id,
         reaction_bump,
         asset_id,
         index,
-        user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
     });
 

@@ -5,6 +5,7 @@ import { airdrop, new_session } from "../utils";
 import { expect } from "chai";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 import { GplCore } from "../../target/types/gpl_core";
+import { createGumDomain, createGumTld } from "../utils";
 
 const program = anchor.workspace.GplCore as anchor.Program<GplCore>;
 const provider = anchor.getProvider();
@@ -16,8 +17,6 @@ describe("Connection", async () => {
   let testUser: anchor.web3.Keypair;
   let feePayer: anchor.web3.Keypair;
   let testUserWallet: NodeWallet;
-  let userPDA: anchor.web3.PublicKey;
-  let testUserPDA: anchor.web3.PublicKey;
   let profilePDA: anchor.web3.PublicKey;
   let testProfilePDA: anchor.web3.PublicKey;
   let connectionPDA: anchor.web3.PublicKey;
@@ -29,15 +28,15 @@ describe("Connection", async () => {
     );
     // Create a user
     const randomHash = randombytes(32);
-    const userTx = program.methods.createUser(randomHash);
-    const userPubKeys = await userTx.pubkeys();
-    userPDA = userPubKeys.user as anchor.web3.PublicKey;
-    await userTx.rpc();
+
+    const gumTld = await createGumTld();
+    const screenName = await createGumDomain(gumTld, "foobar");
 
     // Create a profile
+    const profileMetdataUri = "https://example.com";
     const profileTx = program.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();
@@ -51,28 +50,17 @@ describe("Connection", async () => {
     feePayer = anchor.web3.Keypair.generate();
     await airdrop(feePayer.publicKey);
 
-    const randomTestHash = randombytes(32);
-    const createTestUser = program.methods
-      .createUser(randomTestHash)
-      .accounts({ payer: testUser.publicKey, authority: testUser.publicKey });
-    const testUserPubKeys = await createTestUser.pubkeys();
-    testUserPDA = testUserPubKeys.user as anchor.web3.PublicKey;
-    const testUserTx = await createTestUser.transaction();
-    testUserTx.recentBlockhash = (
-      await rpcConnection.getLatestBlockhash()
-    ).blockhash;
-    testUserTx.feePayer = testUser.publicKey;
-    const signedTestUserTransaction = await testUserWallet.signTransaction(
-      testUserTx
-    );
-    await sendAndConfirmTransaction(rpcConnection, signedTestUserTransaction, [
-      testUser,
-    ]);
-
     // Create a testProfile
+    const testProfileMetdataUri = "https://example.com";
+    const testRandomHash = randombytes(32);
+    const testScreenName = await createGumDomain(gumTld, "test", testUser);
     const testProfile = program.methods
-      .createProfile("Personal")
-      .accounts({ payer: testUser.publicKey, user: testUserPDA, authority: testUser.publicKey });
+      .createProfile(testRandomHash, testProfileMetdataUri)
+      .accounts({
+        payer: testUser.publicKey,
+        authority: testUser.publicKey,
+        screenName: testScreenName,
+      });
     const testProfilePubKeys = await testProfile.pubkeys();
     testProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
     const testProfileTx = await testProfile.transaction();
@@ -92,7 +80,6 @@ describe("Connection", async () => {
     const connection = program.methods.createConnection().accounts({
       fromProfile: profilePDA,
       toProfile: testProfilePDA,
-      user: userPDA,
       sessionToken: null,
     });
     const pubKeys = await connection.pubkeys();
@@ -115,7 +102,6 @@ describe("Connection", async () => {
       fromProfile: profilePDA,
       toProfile: testProfilePDA,
       connection: connectionPDA,
-      user: userPDA,
       sessionToken: null,
       // @ts-ignore
       refundReceiver: provider.wallet.publicKey,
@@ -133,15 +119,12 @@ describe("Connection", async () => {
   });
 
   it("should create a connection when a seperate fee payer is specified", async () => {
-    const createConnection = program.methods
-      .createConnection()
-      .accounts({
-        payer: feePayer.publicKey,
-        fromProfile: profilePDA,
-        toProfile: testProfilePDA,
-        user: userPDA,
-        sessionToken: null,
-      });
+    const createConnection = program.methods.createConnection().accounts({
+      payer: feePayer.publicKey,
+      fromProfile: profilePDA,
+      toProfile: testProfilePDA,
+      sessionToken: null,
+    });
     const pubKeys = await createConnection.pubkeys();
     connectionPDA = pubKeys.connection as anchor.web3.PublicKey;
     await createConnection.signers([feePayer]).rpc();
@@ -157,15 +140,17 @@ describe("Connection", async () => {
     );
 
     // Cleanup for next tests
-    await program.methods.deleteConnection().accounts({
-      fromProfile: profilePDA,
-      toProfile: testProfilePDA,
-      connection: connectionPDA,
-      user: userPDA,
-      sessionToken: null,
-      // @ts-ignore
-      refundReceiver: provider.wallet.publicKey,
-    }).rpc();
+    await program.methods
+      .deleteConnection()
+      .accounts({
+        fromProfile: profilePDA,
+        toProfile: testProfilePDA,
+        connection: connectionPDA,
+        sessionToken: null,
+        // @ts-ignore
+        refundReceiver: provider.wallet.publicKey,
+      })
+      .rpc();
   });
 
   describe("Connection with session token", async () => {
@@ -186,7 +171,6 @@ describe("Connection", async () => {
       const connection = program.methods.createConnection().accounts({
         fromProfile: profilePDA,
         toProfile: testProfilePDA,
-        user: userPDA,
         sessionToken: sessionToken,
         authority: sessionKeypair.publicKey,
       });
@@ -209,7 +193,6 @@ describe("Connection", async () => {
         fromProfile: profilePDA,
         toProfile: testProfilePDA,
         connection: connectionPDA,
-        user: userPDA,
         sessionToken: sessionToken,
         authority: sessionKeypair.publicKey,
         // @ts-ignore

@@ -1,6 +1,6 @@
 use crate::errors::{GumError, PostError};
 use crate::events::{PostCommentNew, PostDeleted, PostNew, PostUpdated};
-use crate::state::{Post, Profile, User, MAX_LEN_URI};
+use crate::state::{Post, Profile, MAX_LEN_URI};
 use gpl_session::{session_auth_or, Session};
 
 use anchor_lang::prelude::*;
@@ -31,25 +31,15 @@ pub struct CreatePost<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = user,
     )]
     pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
-        ],
-        bump,
-    )]
-    pub user: Account<'info, User>,
 
     #[session(
         signer = authority,
-        authority = user.authority.key()
+        authority = profile.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     
@@ -60,7 +50,7 @@ pub struct CreatePost<'info> {
 
 // Handler to create a new Post account
 #[session_auth_or(
-    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    ctx.accounts.profile.authority.key() == ctx.accounts.authority.key(),
     GumError::UnauthorizedSigner
 )]
 pub fn create_post_handler(
@@ -79,7 +69,6 @@ pub fn create_post_handler(
     emit!(PostNew {
         post: *post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,
@@ -105,24 +94,14 @@ pub struct UpdatePost<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = user,
     )]
     pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
-        ],
-        bump,
-    )]
-    pub user: Account<'info, User>,
     #[session(
         signer = authority,
-        authority = user.authority.key()
+        authority = profile.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
@@ -132,7 +111,7 @@ pub struct UpdatePost<'info> {
 
 // Handler to update a Post account
 #[session_auth_or(
-    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    ctx.accounts.profile.authority.key() == ctx.accounts.authority.key(),
     GumError::UnauthorizedSigner
 )]
 pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String) -> Result<()> {
@@ -144,7 +123,6 @@ pub fn update_post_handler(ctx: Context<UpdatePost>, metadata_uri: String) -> Re
     emit!(PostUpdated {
         post: *post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         metadata_uri: post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,
     });
@@ -172,21 +150,11 @@ pub struct CreateComment<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = user,
     )]
     pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
-        ],
-        bump,
-    )]
-    pub user: Account<'info, User>,
     #[account(
         seeds = [
             POST_PREFIX_SEED.as_bytes(),
@@ -197,7 +165,7 @@ pub struct CreateComment<'info> {
     pub reply_to: Account<'info, Post>,
     #[session(
         signer = authority,
-        authority = user.authority.key()
+        authority = profile.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     pub authority: Signer<'info>,
@@ -207,7 +175,7 @@ pub struct CreateComment<'info> {
 
 // Handler to add a comment to a post
 #[session_auth_or(
-    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    ctx.accounts.profile.authority.key() == ctx.accounts.authority.key(),
     GumError::UnauthorizedSigner
 )]
 pub fn create_comment_handler(
@@ -227,7 +195,6 @@ pub fn create_comment_handler(
     emit!(PostCommentNew {
         post: *post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
         reply_to: *ctx.accounts.reply_to.to_account_info().key,
@@ -254,37 +221,26 @@ pub struct DeletePost<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = user,
     )]
     pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
-        ],
-        bump,
-    )]
-    pub user: Account<'info, User>,
-
     #[session(
         signer = authority,
-        authority = user.authority.key()
+        authority = profile.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
     pub authority: Signer<'info>,
-    #[account(mut, constraint = refund_receiver.key() == user.authority)]
+    #[account(mut, constraint = refund_receiver.key() == profile.authority)]
     pub refund_receiver: SystemAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
 // Handler to delete a Post account
 #[session_auth_or(
-    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    ctx.accounts.profile.authority.key() == ctx.accounts.authority.key(),
     GumError::UnauthorizedSigner
 )]
 pub fn delete_post_handler(ctx: Context<DeletePost>) -> Result<()> {
@@ -292,7 +248,6 @@ pub fn delete_post_handler(ctx: Context<DeletePost>) -> Result<()> {
     emit!(PostDeleted {
         post: *ctx.accounts.post.to_account_info().key,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
     });
     Ok(())

@@ -1,9 +1,7 @@
 use crate::errors::GumError;
-use crate::state::{Post, Profile, Reaction, ReactionType, User};
+use crate::state::{Post, Profile, Reaction};
 
 use anchor_lang::prelude::*;
-use std::convert::AsRef;
-use std::str::FromStr;
 
 use crate::constants::*;
 use crate::events::{ReactionDeleted, ReactionNew};
@@ -29,36 +27,19 @@ pub struct CreateReaction<'info> {
         space = Reaction::LEN
     )]
     pub reaction: Account<'info, Reaction>,
-    #[account(
-        seeds = [
-            POST_PREFIX_SEED.as_bytes(),
-            to_post.random_hash.as_ref(),
-        ],
-        bump,
-    )]
     pub to_post: Account<'info, Post>,
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = user,
     )]
     pub from_profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
-        ],
-        bump,
-    )]
-    pub user: Account<'info, User>,
 
     #[session(
         signer = authority,
-        authority = user.authority.key()
+        authority = from_profile.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
 
@@ -70,20 +51,20 @@ pub struct CreateReaction<'info> {
 
 // Handler to create a new Reaction account
 #[session_auth_or(
-    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    ctx.accounts.from_profile.authority.key() == ctx.accounts.authority.key(),
     GumError::UnauthorizedSigner
 )]
 pub fn create_reaction_handler(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
+    Reaction::validate_reaction_type(&reaction_type)?;
     let reaction = &mut ctx.accounts.reaction;
-    reaction.reaction_type = ReactionType::from_str(&reaction_type).unwrap();
+    reaction.reaction_type = reaction_type;
     reaction.to_post = *ctx.accounts.to_post.to_account_info().key;
     reaction.from_profile = *ctx.accounts.from_profile.to_account_info().key;
 
     // emit a new reaction event
     emit!(ReactionNew {
         reaction: *reaction.to_account_info().key,
-        reaction_type: reaction.reaction_type,
-        user: *ctx.accounts.user.to_account_info().key,
+        reaction_type: reaction.reaction_type.clone(),
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,
@@ -99,7 +80,7 @@ pub struct DeleteReaction<'info> {
         mut,
         seeds = [
             REACTION_PREFIX_SEED.as_bytes(),
-            reaction.reaction_type.as_ref().as_bytes(),
+            reaction.reaction_type.as_ref(),
             reaction.to_post.as_ref(),
             reaction.from_profile.as_ref(),
         ],
@@ -109,42 +90,26 @@ pub struct DeleteReaction<'info> {
         close = refund_receiver,
     )]
     pub reaction: Account<'info, Reaction>,
-    #[account(
-        seeds = [
-            POST_PREFIX_SEED.as_bytes(),
-            to_post.random_hash.as_ref(),
-        ],
-        bump,
-    )]
     pub to_post: Account<'info, Post>,
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            from_profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
+            from_profile.random_hash.as_ref(),
         ],
         bump,
-        has_one = user,
     )]
     pub from_profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
-        ],
-        bump,
-    )]
-    pub user: Account<'info, User>,
 
     #[session(
         signer = authority,
-        authority = user.authority.key()
+        authority = from_profile.authority.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
+
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(mut, constraint = refund_receiver.key() == user.authority)]
+    #[account(mut, constraint = refund_receiver.key() == from_profile.authority)]
     pub refund_receiver: SystemAccount<'info>,
 
     // The system program
@@ -153,15 +118,14 @@ pub struct DeleteReaction<'info> {
 
 // Handler to delete a Reaction account
 #[session_auth_or(
-    ctx.accounts.user.authority.key() == ctx.accounts.authority.key(),
+    ctx.accounts.from_profile.authority.key() == ctx.accounts.authority.key(),
     GumError::UnauthorizedSigner
 )]
 pub fn delete_reaction_handler(ctx: Context<DeleteReaction>) -> Result<()> {
     // emit a reaction deleted event
     emit!(ReactionDeleted {
         reaction: *ctx.accounts.reaction.to_account_info().key,
-        reaction_type: ctx.accounts.reaction.reaction_type,
-        user: *ctx.accounts.user.to_account_info().key,
+        reaction_type: ctx.accounts.reaction.reaction_type.to_string(),
         to_post: *ctx.accounts.to_post.to_account_info().key,
         from_profile: *ctx.accounts.from_profile.to_account_info().key,
         timestamp: Clock::get()?.unix_timestamp,

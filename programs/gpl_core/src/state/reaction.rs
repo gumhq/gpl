@@ -1,6 +1,5 @@
+use crate::errors::GumError;
 use anchor_lang::prelude::*;
-
-use strum_macros::{AsRefStr, EnumString};
 
 #[account]
 pub struct Reaction {
@@ -8,30 +7,24 @@ pub struct Reaction {
     pub from_profile: Pubkey,
     // The post that this reaction is to
     pub to_post: Pubkey,
-    pub reaction_type: ReactionType,
+    // NOTE:
+    // The burden of validating the reaction is on the client
+    // Since it is hard to define what a valid reaction is and will vary from app to app
+    // It's better to let the client decide what is valid
+    //
+    // Might change this to a [u8; 32] in the future
+    pub reaction_type: String,
 }
 
 impl Reaction {
-    pub const LEN: usize = 8 + std::mem::size_of::<Self>();
-}
+    pub const REACTION_TYPE_MAX_LEN: usize = 32;
+    pub const LEN: usize = 8 + 64 + Self::REACTION_TYPE_MAX_LEN + std::mem::size_of::<Reaction>();
 
-// Probably better to use emoji codes instead of strings
-#[derive(
-    AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, AsRefStr, EnumString,
-)]
-pub enum ReactionType {
-    #[strum(ascii_case_insensitive)]
-    Like,
-    #[strum(ascii_case_insensitive)]
-    Dislike,
-    #[strum(ascii_case_insensitive)]
-    Love,
-    #[strum(ascii_case_insensitive)]
-    Haha,
-    #[strum(ascii_case_insensitive)]
-    Wow,
-    #[strum(ascii_case_insensitive)]
-    Sad,
-    #[strum(ascii_case_insensitive)]
-    Angry,
+    pub fn validate_reaction_type(reaction_type: &str) -> Result<()> {
+        require!(
+            reaction_type.len() <= Self::REACTION_TYPE_MAX_LEN,
+            GumError::ReactionTypeTooLong
+        );
+        Ok(())
+    }
 }

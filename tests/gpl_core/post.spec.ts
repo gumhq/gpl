@@ -2,6 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import randombytes from "randombytes";
 import { expect } from "chai";
 import { GplCore } from "../../target/types/gpl_core";
+import { createGumDomain, createGumTld } from "../utils";
 import { airdrop, new_session } from "../utils";
 import { sendAndConfirmTransaction } from "@solana/web3.js";
 
@@ -12,23 +13,20 @@ anchor.setProvider(anchor.AnchorProvider.env());
 const provider = anchor.getProvider();
 
 describe("Post", async () => {
-  let userPDA: anchor.web3.PublicKey;
   let profilePDA: anchor.web3.PublicKey;
   let postPDA: anchor.web3.PublicKey;
   let feePayer: anchor.web3.Keypair;
 
   before(async () => {
-    // Create a user
     const randomHash = randombytes(32);
-    const userTx = program.methods.createUser(randomHash);
-    const userPubKeys = await userTx.pubkeys();
-    userPDA = userPubKeys.user as anchor.web3.PublicKey;
-    await userTx.rpc();
+    const gumTld = await createGumTld();
 
     // Create a profile
+    const profileMetdataUri = "https://example.com";
+    const screenName = await createGumDomain(gumTld, "sdfsdfdsfgsdgsd");
     const profileTx = program.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.rpc();
@@ -43,7 +41,7 @@ describe("Post", async () => {
     const metadataUri = "This is a test post";
     const post = program.methods
       .createPost(metadataUri, randomHash)
-      .accounts({ user: userPDA, profile: profilePDA, sessionToken: null });
+      .accounts({ profile: profilePDA, sessionToken: null });
     const postPubKeys = await post.pubkeys();
     postPDA = postPubKeys.post as anchor.web3.PublicKey;
     await post.rpc();
@@ -55,7 +53,6 @@ describe("Post", async () => {
   it("should update a post", async () => {
     const metadataUri = "This is an updated test post";
     const post = program.methods.updatePost(metadataUri).accounts({
-      user: userPDA,
       profile: profilePDA,
       post: postPDA,
       sessionToken: null,
@@ -68,7 +65,6 @@ describe("Post", async () => {
 
   it("should delete a post", async () => {
     const post = program.methods.deletePost().accounts({
-      user: userPDA,
       profile: profilePDA,
       post: postPDA,
       sessionToken: null,
@@ -90,7 +86,11 @@ describe("Post", async () => {
     const metadataUri = "This is a test post";
     const createPost = program.methods
       .createPost(metadataUri, randomHash)
-      .accounts({ payer: feePayer.publicKey, user: userPDA, profile: profilePDA, sessionToken: null });
+      .accounts({
+        payer: feePayer.publicKey,
+        profile: profilePDA,
+        sessionToken: null,
+      });
     const pubKeys = await createPost.pubkeys();
     postPDA = pubKeys.post as anchor.web3.PublicKey;
     await createPost.signers([feePayer]).rpc();
@@ -119,29 +119,24 @@ describe("Post", async () => {
       randomUserWallet = new anchor.Wallet(randomUser);
       await airdrop(randomUser.publicKey);
 
-      // Create a user
       const randomHash = randombytes(32);
-      const userTx = program.methods
-        .createUser(randomHash)
-        .accounts({ payer: randomUser.publicKey, authority: randomUser.publicKey });
-      const userPubKeys = await userTx.pubkeys();
-      randomUserPDA = userPubKeys.user;
-      const tx = await userTx.transaction();
-      tx.recentBlockhash = (await rpcConnection.getRecentBlockhash()).blockhash;
-      tx.feePayer = randomUser.publicKey;
-      const signedTestUserTransaction = await randomUserWallet.signTransaction(
-        tx
-      );
-      await sendAndConfirmTransaction(
-        rpcConnection,
-        signedTestUserTransaction,
-        [randomUser]
-      );
+      const gumTld = await createGumTld();
 
       // Create a profile
+      const profileMetdataUri = "https://example.com";
+      const screenName = await createGumDomain(
+        gumTld,
+        "testscreename",
+        randomUser
+      );
+      // Create a profile
       const testProfile = program.methods
-        .createProfile("Personal")
-        .accounts({ payer: randomUser.publicKey, user: randomUserPDA, authority: randomUser.publicKey });
+        .createProfile(randomHash, profileMetdataUri)
+        .accounts({
+          payer: randomUser.publicKey,
+          authority: randomUser.publicKey,
+          screenName,
+        });
       const testProfilePubKeys = await testProfile.pubkeys();
       randomProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
       const testProfileTx = await testProfile.transaction();
@@ -172,7 +167,6 @@ describe("Post", async () => {
       const post = program.methods
         .createPost(metadataUri, randomHash)
         .accounts({
-          user: userPDA,
           profile: profilePDA,
           sessionToken: sessionToken,
           authority: sessionKeypair.publicKey,
@@ -191,7 +185,6 @@ describe("Post", async () => {
       const post = program.methods
         .createPost(metadataUri, randomHash)
         .accounts({
-          user: randomUserPDA,
           profile: randomProfilePDA,
           sessionToken: sessionToken,
           authority: randomUser.publicKey,
@@ -212,7 +205,6 @@ describe("Post", async () => {
       const post = program.methods
         .createPost(metadataUri, randomHash)
         .accounts({
-          user: randomUserPDA,
           profile: randomProfilePDA,
           sessionToken: sessionToken,
           authority: randomUser.publicKey,
@@ -230,7 +222,6 @@ describe("Post", async () => {
     it("should update a post", async () => {
       const metadataUri = "This is an updated test post";
       const post = program.methods.updatePost(metadataUri).accounts({
-        user: userPDA,
         profile: profilePDA,
         post: postPDA,
         sessionToken: sessionToken,
@@ -244,7 +235,6 @@ describe("Post", async () => {
 
     it("should delete a post", async () => {
       const post = program.methods.deletePost().accounts({
-        user: userPDA,
         profile: profilePDA,
         post: postPDA,
         sessionToken: sessionToken,

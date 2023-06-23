@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use solana_security_txt::security_txt;
 
 pub mod constants;
 pub mod errors;
@@ -9,10 +8,10 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("CDDMdCAWB5AXgvEy7XJRggAu37QPG1b9aJXndZoPUkkm");
+declare_id!("6MhUAJtKdJx3RDCffUsJsQm8xy9YhhywjEmMYrxRc5j6");
 
 #[cfg(not(feature = "no-entrypoint"))]
-security_txt! {
+solana_security_txt::security_txt! {
     name: "gpl_core",
     project_url: "https://gum.fun",
     contacts: "email:hello@gum.fun,twitter:@gumisfunn",
@@ -26,50 +25,23 @@ pub mod gpl_core {
 
     use super::*;
 
-    // Create a new user account
-    pub fn create_user(ctx: Context<CreateUser>, random_hash: [u8; 32]) -> Result<()> {
-        create_user_handler(ctx, random_hash)
-    }
-
-    // Update a user account with new authority
-    pub fn update_user(ctx: Context<UpdateUser>) -> Result<()> {
-        update_user_handler(ctx)
-    }
-
-    // Delete a user account
-    pub fn delete_user(ctx: Context<DeleteUser>) -> Result<()> {
-        delete_user_handler(ctx)
-    }
-
     // Create a new profile account
-    pub fn create_profile(ctx: Context<CreateProfile>, namespace: String) -> Result<()> {
-        create_profile_handler(ctx, namespace)
+    pub fn create_profile(
+        ctx: Context<CreateProfile>,
+        random_hash: [u8; 32],
+        metadata_uri: String,
+    ) -> Result<()> {
+        create_profile_handler(ctx, random_hash, metadata_uri)
+    }
+
+    // update a profile account
+    pub fn update_profile(ctx: Context<UpdateProfile>, metadata_uri: String) -> Result<()> {
+        update_profile_handler(ctx, metadata_uri)
     }
 
     // Delete a profile account
     pub fn delete_profile(ctx: Context<DeleteProfile>) -> Result<()> {
         delete_profile_handler(ctx)
-    }
-
-    // create a new profile_metadata account
-    pub fn create_profile_metadata(
-        ctx: Context<CreateProfileMetadata>,
-        metadata_uri: String,
-    ) -> Result<()> {
-        create_profile_metadata_handler(ctx, metadata_uri)
-    }
-
-    // update a profile_metadata
-    pub fn update_profile_metadata(
-        ctx: Context<UpdateProfileMetadata>,
-        metadata_uri: String,
-    ) -> Result<()> {
-        update_profile_metadata_handler(ctx, metadata_uri)
-    }
-
-    // delete a profile_metadata
-    pub fn delete_profile_metadata(ctx: Context<DeleteProfileMetadata>) -> Result<()> {
-        delete_profile_metadata_handler(ctx)
     }
 
     // create a new post account
@@ -112,11 +84,61 @@ pub mod gpl_core {
 
     // create a reaction account with reaction type
     pub fn create_reaction(ctx: Context<CreateReaction>, reaction_type: String) -> Result<()> {
+        // By default, reactions are not custom
         create_reaction_handler(ctx, reaction_type)
     }
 
     // delete a reaction account
     pub fn delete_reaction(ctx: Context<DeleteReaction>) -> Result<()> {
         delete_reaction_handler(ctx)
+    }
+
+    // create a badge account
+    pub fn create_badge(ctx: Context<CreateBadge>, metadata_uri: String) -> Result<()> {
+        create_badge_handler(ctx, metadata_uri)
+    }
+
+    // update a badge
+    pub fn update_badge(ctx: Context<UpdateBadge>, metadata_uri: String) -> Result<()> {
+        update_badge_handler(ctx, metadata_uri)
+    }
+
+    // burn a badge
+    pub fn burn_badge(ctx: Context<BurnBadge>) -> Result<()> {
+        burn_badge_handler(ctx)
+    }
+
+    // create an issuer account
+    pub fn create_issuer(ctx: Context<CreateIssuer>) -> Result<()> {
+        create_issuer_handler(ctx)
+    }
+
+    // verify an issuer
+    pub fn verify_issuer(ctx: Context<VerifyIssuer>) -> Result<()> {
+        verify_issuer_handler(ctx)
+    }
+
+    // delete an issuer
+    pub fn delete_issuer(ctx: Context<DeleteIssuer>) -> Result<()> {
+        delete_issuer_handler(ctx)
+    }
+
+    // create a schema account
+    pub fn create_schema(
+        ctx: Context<CreateSchema>,
+        metadata_uri: String,
+        random_hash: [u8; 32],
+    ) -> Result<()> {
+        create_schema_handler(ctx, metadata_uri, random_hash)
+    }
+
+    // update a schema
+    pub fn update_schema(ctx: Context<UpdateSchema>, metadata_uri: String) -> Result<()> {
+        update_schema_handler(ctx, metadata_uri)
+    }
+
+    // delete a schema
+    pub fn delete_schema(ctx: Context<DeleteSchema>) -> Result<()> {
+        delete_schema_handler(ctx)
     }
 }

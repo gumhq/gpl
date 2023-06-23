@@ -7,7 +7,6 @@ pub struct CompressedPostNew {
     pub post_bump: u8,
     pub index: u32,
     pub profile: Pubkey,
-    pub user: Pubkey,
     pub random_hash: [u8; 32],
     pub metadata_uri: String,
     pub timestamp: i64,
@@ -20,7 +19,6 @@ pub struct CompressedPostUpdated {
     pub post_bump: u8,
     pub index: u32,
     pub profile: Pubkey,
-    pub user: Pubkey,
     pub random_hash: [u8; 32],
     pub metadata_uri: String,
     pub timestamp: i64,
@@ -33,7 +31,6 @@ pub struct CompressedPostDeleted {
     pub post_bump: u8,
     pub index: u32,
     pub profile: Pubkey,
-    pub user: Pubkey,
     pub random_hash: [u8; 32],
     pub metadata_uri: String,
     pub timestamp: i64,
@@ -47,7 +44,6 @@ pub struct CompressedConnectionNew {
     pub index: u32,
     pub from_profile: Pubkey,
     pub to_profile: Pubkey,
-    pub user: Pubkey,
     pub timestamp: i64,
 }
 
@@ -59,7 +55,6 @@ pub struct CompressedConnectionDeleted {
     pub index: u32,
     pub from_profile: Pubkey,
     pub to_profile: Pubkey,
-    pub user: Pubkey,
     pub timestamp: i64,
 }
 
@@ -71,7 +66,6 @@ pub struct CompressedReactionNew {
     pub index: u32,
     pub from_profile: Pubkey,
     pub to_post: Pubkey,
-    pub user: Pubkey,
     pub reaction_type: String,
     pub timestamp: i64,
 }
@@ -84,7 +78,6 @@ pub struct CompressedReactionDeleted {
     pub index: u32,
     pub from_profile: Pubkey,
     pub to_post: Pubkey,
-    pub user: Pubkey,
     pub reaction_type: String,
     pub timestamp: i64,
 }
@@ -97,7 +90,6 @@ pub struct CompressedCommentNew {
     pub index: u32,
     pub reply_to: Pubkey,
     pub profile: Pubkey,
-    pub user: Pubkey,
     pub random_hash: [u8; 32],
     pub metadata_uri: String,
     pub timestamp: i64,

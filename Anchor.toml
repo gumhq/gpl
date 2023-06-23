@@ -1,27 +1,27 @@
 anchor_version = "0.26.0"
-solana_version = "1.13.5"
+solana_version = "1.13.8"
 
 [features]
 seeds = true
 skip-lint = false
 
 [programs.localnet]
-gpl_core = "CDDMdCAWB5AXgvEy7XJRggAu37QPG1b9aJXndZoPUkkm"
+gpl_core = "6MhUAJtKdJx3RDCffUsJsQm8xy9YhhywjEmMYrxRc5j6"
 gpl_compression = "41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW"
 gpl_session = "3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE"
-gpl_nameservice = "7LEuQxAEegasvBSq7dDrMregc3mrDtTyHiytNK9pU68u"
+gpl_nameservice = "5kWEYrdyryq3jGP5sUcKwTySzxr3dHzWFBVA3vkt6Nj5"
 
 [programs.devnet]
-gpl_core = "CDDMdCAWB5AXgvEy7XJRggAu37QPG1b9aJXndZoPUkkm"
+gpl_core = "6MhUAJtKdJx3RDCffUsJsQm8xy9YhhywjEmMYrxRc5j6"
 gpl_compression = "41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW"
 gpl_session = "3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE"
-gpl_nameservice = "7LEuQxAEegasvBSq7dDrMregc3mrDtTyHiytNK9pU68u"
+gpl_nameservice = "5kWEYrdyryq3jGP5sUcKwTySzxr3dHzWFBVA3vkt6Nj5"
 
 [programs.mainnet]
-gpl_core = "CDDMdCAWB5AXgvEy7XJRggAu37QPG1b9aJXndZoPUkkm"
+gpl_core = "6MhUAJtKdJx3RDCffUsJsQm8xy9YhhywjEmMYrxRc5j6"
 gpl_compression = "41kNwkQ9jESNYZJyAA1ENscQfx7vfkEf6uetVSFmfyaW"
 gpl_session = "3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE"
-gpl_nameservice = "7LEuQxAEegasvBSq7dDrMregc3mrDtTyHiytNK9pU68u"
+gpl_nameservice = "5kWEYrdyryq3jGP5sUcKwTySzxr3dHzWFBVA3vkt6Nj5"
 
 
 [[test.genesis]]

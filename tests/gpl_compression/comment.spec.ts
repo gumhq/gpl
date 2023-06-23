@@ -21,6 +21,10 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { expect } from "chai";
 import randomBytes from "randombytes";
 
+import { createGumDomain, createGumTld } from "../utils/index";
+
+import { faker } from "@faker-js/faker";
+
 anchor.setProvider(anchor.AnchorProvider.env());
 const rpcConnection = anchor.getProvider().connection;
 
@@ -30,10 +34,8 @@ describe("Comment Compression", async () => {
   let treeConfigPDA: PublicKey;
   let offChainTree: MerkleTree;
 
-  let userPDA: PublicKey;
   let profilePDA: PublicKey;
   let postPDA: PublicKey;
-  let reactionPDA: PublicKey;
 
   beforeEach(async () => {
     // Setup a new keypair and airdrop some SOL
@@ -52,17 +54,19 @@ describe("Comment Compression", async () => {
     offChainTree = treeResult.offChainTree;
 
     const randomHash = randomBytes(32);
-    const userTx = gpl_core.methods.createUser(randomHash).accounts({
-      authority: payer.publicKey,
-    });
-    const userPubKeys = await userTx.pubkeys();
-    userPDA = userPubKeys.user as anchor.web3.PublicKey;
-    await userTx.signers([payer]).rpc();
+
+    const gumTld = await createGumTld();
 
     // Create a profile
+    const profileMetdataUri = "https://example.com";
+    const screenName = await createGumDomain(
+      gumTld,
+      faker.internet.userName(),
+      payer
+    );
     const profileTx = gpl_core.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA, authority: payer.publicKey });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ authority: payer.publicKey, screenName });
     const profilePubKeys = await profileTx.pubkeys();
     profilePDA = profilePubKeys.profile as anchor.web3.PublicKey;
     await profileTx.signers([payer]).rpc();
@@ -81,7 +85,6 @@ describe("Comment Compression", async () => {
     await gpl_compression.methods
       .createCompressedPost(metadataUri, postRandomHash)
       .accounts({
-        user: userPDA,
         profile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,
@@ -127,7 +130,6 @@ describe("Comment Compression", async () => {
         index
       )
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         treeConfig: treeConfigPDA,
         merkleTree,

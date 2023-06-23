@@ -6,6 +6,8 @@ import {
   gpl_compression,
   setupTree,
   to_leaf,
+  createGumTld,
+  createGumDomain,
 } from "../utils/index";
 
 import {
@@ -20,13 +22,14 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { expect } from "chai";
 import randomBytes from "randombytes";
 
+import { faker } from "@faker-js/faker";
+
 anchor.setProvider(anchor.AnchorProvider.env());
 const rpcConnection = anchor.getProvider().connection;
 
 describe("Connection Compression", async () => {
   let payer: Keypair;
   let merkleTree: PublicKey;
-  let userPDA: PublicKey;
   let profilePDA: PublicKey;
   let testProfilePDA: anchor.web3.PublicKey;
   let treeConfigPDA: PublicKey;
@@ -51,16 +54,19 @@ describe("Connection Compression", async () => {
 
     // Set up a user
     const randomHash = randomBytes(32);
-    const userTx = gpl_core.methods.createUser(randomHash).accounts({
-      authority: payer.publicKey,
-    });
-    userPDA = (await userTx.pubkeys()).user;
-    await userTx.signers([payer]).rpc();
+
+    const gumTld = await createGumTld();
 
     // Set up a profile
+    const profileMetdataUri = "https://example.com";
+    const screenName = await createGumDomain(
+      gumTld,
+      faker.internet.userName(),
+      payer
+    );
     const profileTx = gpl_core.methods
-      .createProfile("Personal")
-      .accounts({ user: userPDA, authority: payer.publicKey });
+      .createProfile(randomHash, profileMetdataUri)
+      .accounts({ authority: payer.publicKey, screenName });
     profilePDA = (await profileTx.pubkeys()).profile;
     await profileTx.signers([payer]).rpc();
 
@@ -69,18 +75,20 @@ describe("Connection Compression", async () => {
     await airdrop(testUser.publicKey);
 
     const randomTestHash = randomBytes(32);
-    const createTestUser = gpl_core.methods
-      .createUser(randomTestHash)
-      .accounts({ authority: testUser.publicKey });
-    const testUserPubKeys = await createTestUser.pubkeys();
-    let testUserPDA = testUserPubKeys.user as anchor.web3.PublicKey;
-
-    await createTestUser.signers([testUser]).rpc();
 
     // Create a testProfile
+    const testProfileMetdataUri = "https://example.com";
+    const testScreenName = await createGumDomain(
+      gumTld,
+      faker.internet.userName(),
+      testUser
+    );
     const testProfile = gpl_core.methods
-      .createProfile("Personal")
-      .accounts({ user: testUserPDA, authority: testUser.publicKey });
+      .createProfile(randomTestHash, testProfileMetdataUri)
+      .accounts({
+        authority: testUser.publicKey,
+        screenName: testScreenName,
+      });
     const testProfilePubKeys = await testProfile.pubkeys();
     testProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
 
@@ -93,7 +101,6 @@ describe("Connection Compression", async () => {
     await gpl_compression.methods
       .createCompressedConnection()
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         toProfile: testProfilePDA,
         treeConfig: treeConfigPDA,
@@ -137,7 +144,6 @@ describe("Connection Compression", async () => {
     await gpl_compression.methods
       .createCompressedConnection()
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         toProfile: testProfilePDA,
         treeConfig: treeConfigPDA,
@@ -182,7 +188,6 @@ describe("Connection Compression", async () => {
     await gpl_compression.methods
       .deleteCompressedConnection(proof.root, index)
       .accounts({
-        user: userPDA,
         fromProfile: profilePDA,
         toProfile: testProfilePDA,
         treeConfig: treeConfigPDA,

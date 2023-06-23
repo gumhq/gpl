@@ -12,6 +12,7 @@
     "@project-serum/anchor": "^0.26.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^7.6.0",
     "@solana/spl-account-compression": "^0.1.5",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",

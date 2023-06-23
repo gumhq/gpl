@@ -7,7 +7,7 @@ use gpl_core::errors::PostError;
 use spl_account_compression::wrap_application_data_v1;
 use spl_account_compression::Node;
 
-use gpl_core::state::{Post, Profile, User, MAX_LEN_URI};
+use gpl_core::state::{Post, Profile, MAX_LEN_URI};
 
 use anchor_lang::prelude::*;
 use std::convert::AsRef;
@@ -26,24 +26,13 @@ pub struct CreateCompressedPost<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub profile: Account<'info, Profile>,
 
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
@@ -110,7 +99,6 @@ pub fn create_compressed_post_handler(
         post_id,
         post_bump,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         random_hash: random_hash,
         metadata_uri: post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,
@@ -127,24 +115,13 @@ pub struct UpdateCompressedPost<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub profile: Account<'info, Profile>,
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
 
@@ -236,7 +213,6 @@ pub fn update_compressed_post_handler<'info>(
         post_id,
         post_bump,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         random_hash: random_hash,
         metadata_uri: new_post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,
@@ -254,24 +230,13 @@ pub struct DeleteCompressedPost<'info> {
     #[account(
         seeds = [
             PROFILE_PREFIX_SEED.as_bytes(),
-            profile.namespace.as_ref().as_bytes(),
-            user.to_account_info().key.as_ref(),
-        ],
-        seeds::program = gpl_core_program.key(),
-        bump,
-        has_one = user,
-    )]
-    pub profile: Account<'info, Profile>,
-    #[account(
-        seeds = [
-            USER_PREFIX_SEED.as_bytes(),
-            user.random_hash.as_ref(),
+            profile.random_hash.as_ref(),
         ],
         seeds::program = gpl_core_program.key(),
         bump,
         has_one = authority,
     )]
-    pub user: Account<'info, User>,
+    pub profile: Account<'info, Profile>,
 
     #[account(seeds = [merkle_tree.key.as_ref()], bump)]
     pub tree_config: Account<'info, TreeConfig>,
@@ -348,7 +313,6 @@ pub fn delete_compressed_post_handler<'info>(
         post_id,
         post_bump,
         profile: *ctx.accounts.profile.to_account_info().key,
-        user: *ctx.accounts.user.to_account_info().key,
         random_hash: random_hash,
         metadata_uri: old_post.metadata_uri.clone(),
         timestamp: Clock::get()?.unix_timestamp,
