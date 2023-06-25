@@ -193,7 +193,7 @@ pub fn create_schema_handler(
         ctx.accounts.authority.key(),
         // FIXME: Move this to constant byte and importantly use a different key before deploying.
         // This is a quick hack to test the patch.
-        Pubkey::from_str("Bi2ZL1UijCXwtNYi132NyMDRnzVxpuAVcgsqVuUgee5A").unwrap(),
+        Pubkey::from_str("9fyuDiDxZJ6Nfey7EhZchYkF11M6gUhfXvUyB1oFWZmX").unwrap(),
         GumError::UnauthorizedSigner
     );
     require!(metadata_uri.len() <= MAX_LEN_URI, GumError::URITooLong);
@@ -230,7 +230,7 @@ pub fn update_schema_handler(ctx: Context<UpdateSchema>, metadata_uri: String) -
         ctx.accounts.authority.key(),
         // FIXME: Move this to constant byte and importantly use a different key before deploying.
         // This is a quick hack to test the patch.
-        Pubkey::from_str("Bi2ZL1UijCXwtNYi132NyMDRnzVxpuAVcgsqVuUgee5A").unwrap(),
+        Pubkey::from_str("9fyuDiDxZJ6Nfey7EhZchYkF11M6gUhfXvUyB1oFWZmX").unwrap(),
         GumError::UnauthorizedSigner
     );
     require!(metadata_uri.len() <= MAX_LEN_URI, GumError::URITooLong);
@@ -263,7 +263,7 @@ pub fn delete_schema_handler(ctx: Context<DeleteSchema>) -> Result<()> {
         ctx.accounts.authority.key(),
         // FIXME: Move this to constant byte and importantly use a different key before deploying.
         // This is a quick hack to test the patch.
-        Pubkey::from_str("Bi2ZL1UijCXwtNYi132NyMDRnzVxpuAVcgsqVuUgee5A").unwrap(),
+        Pubkey::from_str("9fyuDiDxZJ6Nfey7EhZchYkF11M6gUhfXvUyB1oFWZmX").unwrap(),
         GumError::UnauthorizedSigner
     );
     Ok(())
@@ -332,7 +332,7 @@ pub fn verify_issuer_handler(ctx: Context<VerifyIssuer>) -> Result<()> {
         ctx.accounts.signer.key(),
         // FIXME: Move this to constant byte and importantly use a different key before deploying.
         // This is a quick hack to test the patch.
-        Pubkey::from_str("Bi2ZL1UijCXwtNYi132NyMDRnzVxpuAVcgsqVuUgee5A").unwrap(),
+        Pubkey::from_str("9fyuDiDxZJ6Nfey7EhZchYkF11M6gUhfXvUyB1oFWZmX").unwrap(),
         GumError::InvalidSignerToVerify
     );
 
