@@ -105,11 +105,13 @@ export async function new_session(
   authority?: Keypair
 ): Promise<{ sessionPDA: PublicKey; sessionSigner: Keypair }> {
   const sessionSigner = Keypair.generate();
-  const sessionTx = gpl_session.methods.createSession(true, null).accounts({
-    authority: user,
-    sessionSigner: sessionSigner.publicKey,
-    targetProgram,
-  });
+  const sessionTx = gpl_session.methods
+    .createSession(true, null, null)
+    .accounts({
+      authority: user,
+      sessionSigner: sessionSigner.publicKey,
+      targetProgram,
+    });
   const sessionPubKeys = await sessionTx.pubkeys();
   const sessionPDA = sessionPubKeys.sessionToken as PublicKey;
 
