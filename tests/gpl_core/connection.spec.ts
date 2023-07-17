@@ -60,20 +60,11 @@ describe("Connection", async () => {
         payer: testUser.publicKey,
         authority: testUser.publicKey,
         screenName: testScreenName,
-      });
+      })
+      .signers([testUser]);
     const testProfilePubKeys = await testProfile.pubkeys();
     testProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
-    const testProfileTx = await testProfile.transaction();
-    testProfileTx.recentBlockhash = (
-      await rpcConnection.getLatestBlockhash()
-    ).blockhash;
-    testProfileTx.feePayer = testUser.publicKey;
-    const signedTransaction = await testUserWallet.signTransaction(
-      testProfileTx
-    );
-    await sendAndConfirmTransaction(rpcConnection, signedTransaction, [
-      testUser,
-    ]);
+    await testProfile.rpc();
   });
 
   it("should create a connection", async () => {

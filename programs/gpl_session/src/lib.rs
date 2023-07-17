@@ -26,12 +26,14 @@ pub mod gpl_session {
         ctx: Context<CreateSessionToken>,
         top_up: Option<bool>,
         valid_until: Option<i64>,
+        top_up_amount: Option<u64>,
     ) -> Result<()> {
         // Set top up to false by default
         let top_up = top_up.unwrap_or(false);
         // Set valid until to 1 hour from now by default
         let valid_until = valid_until.unwrap_or(Clock::get()?.unix_timestamp + 60 * 60 * 1);
-        create_session_token_handler(ctx, top_up, valid_until)
+        let top_up_amount = top_up_amount.unwrap_or(LAMPORTS_PER_SOL.checked_div(100).unwrap());
+        create_session_token_handler(ctx, top_up, valid_until, top_up_amount)
     }
 
     // revoke a session token
@@ -74,11 +76,18 @@ pub fn create_session_token_handler(
     ctx: Context<CreateSessionToken>,
     top_up: bool,
     valid_until: i64,
+    top_up_amount: u64,
 ) -> Result<()> {
     // Valid until can't be greater than a day
     require!(
         valid_until <= Clock::get()?.unix_timestamp + 60 * 60 * 24,
         SessionError::ValidityTooLong
+    );
+
+    // Top up amount can't be greater than 1 SOL
+    require!(
+        top_up_amount <= LAMPORTS_PER_SOL,
+        SessionError::TopUpAmountTooHigh
     );
 
     let session_token = &mut ctx.accounts.session_token;
@@ -100,7 +109,7 @@ pub fn create_session_token_handler(
                     to: ctx.accounts.session_signer.to_account_info(),
                 },
             ),
-            LAMPORTS_PER_SOL.checked_div(100).unwrap(),
+            top_up_amount,
         )?;
     }
 
@@ -219,4 +228,6 @@ pub enum SessionError {
     InvalidToken,
     #[msg("No session token provided")]
     NoToken,
+    #[msg("Top up amount is too high")]
+    TopUpAmountTooHigh,
 }
