@@ -21,4 +21,5 @@ default = []
 [dependencies]
 anchor-lang = "0.27.0"
 solana-security-txt = "1.1.0"
+solana-program = "=1.14.17"
 gpl-session-macros = { version = "0.1.0", path = "macros", optional = true }
