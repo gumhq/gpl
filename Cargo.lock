@@ -742,7 +742,7 @@ version = "1.0.0"
 dependencies = [
  "anchor-lang 0.26.0",
  "gpl-nameservice",
- "gpl-session 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gpl-session 0.2.0",
  "solana-security-txt",
 ]
 
@@ -756,21 +756,21 @@ dependencies = [
 [[package]]
 name = "gpl-session"
 version = "0.2.0"
-dependencies = [
- "anchor-lang 0.27.0",
- "gpl-session-macros 0.1.0",
- "solana-program",
- "solana-security-txt",
-]
-
-[[package]]
-name = "gpl-session"
-version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6c883a012df5486284d153cbe92415bcff2a04e9db9d912d998d52c0ffc5c3e"
 dependencies = [
  "anchor-lang 0.26.0",
  "gpl-session-macros 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "solana-security-txt",
+]
+
+[[package]]
+name = "gpl-session"
+version = "1.0.0"
+dependencies = [
+ "anchor-lang 0.27.0",
+ "gpl-session-macros 0.1.0",
+ "solana-program",
  "solana-security-txt",
 ]
 
