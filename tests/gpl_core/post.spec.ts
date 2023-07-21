@@ -136,20 +136,11 @@ describe("Post", async () => {
           payer: randomUser.publicKey,
           authority: randomUser.publicKey,
           screenName,
-        });
+        })
+        .signers([randomUser]);
       const testProfilePubKeys = await testProfile.pubkeys();
       randomProfilePDA = testProfilePubKeys.profile as anchor.web3.PublicKey;
-      const testProfileTx = await testProfile.transaction();
-      testProfileTx.recentBlockhash = (
-        await rpcConnection.getLatestBlockhash()
-      ).blockhash;
-      testProfileTx.feePayer = randomUser.publicKey;
-      const signedTransaction = await randomUserWallet.signTransaction(
-        testProfileTx
-      );
-      await sendAndConfirmTransaction(rpcConnection, signedTransaction, [
-        randomUser,
-      ]);
+      await testProfile.rpc();
 
       // Create a session
       // @ts-ignore
