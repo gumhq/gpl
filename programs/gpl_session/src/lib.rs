@@ -77,7 +77,7 @@ pub fn create_session_token_handler(
 ) -> Result<()> {
     // Valid until can't be greater than a week
     require!(
-        valid_until <= Clock::get()?.unix_timestamp + 7 * 60 * 60 * 24,
+        valid_until <= Clock::get()?.unix_timestamp + (60 * 60 * 24 * 7),
         SessionError::ValidityTooLong
     );
 

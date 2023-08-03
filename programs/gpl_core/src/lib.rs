@@ -9,7 +9,6 @@ pub mod state;
 use instructions::*;
 
 declare_id!("6MhUAJtKdJx3RDCffUsJsQm8xy9YhhywjEmMYrxRc5j6");
-
 #[cfg(not(feature = "no-entrypoint"))]
 solana_security_txt::security_txt! {
     name: "gpl_core",
