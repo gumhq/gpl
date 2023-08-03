@@ -8,7 +8,7 @@ Manage sessions in your Solana Anchor Programs.
 
 
 ```bash
-cargo add gpl-session --features no-entrypoint
+cargo add gpl-session@1.0.0 --features no-entrypoint
 ```
 
 If you're using anchor 0.26.0
